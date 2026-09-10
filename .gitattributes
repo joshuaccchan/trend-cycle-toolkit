@@ -1,0 +1,7 @@
+# Never normalize line endings or content, anywhere in the repository.
+# Two things depend on it. The vendored-unchanged check compares a file here
+# against a copy in another repository, and the published CSVs are committed
+# artifacts whose bytes are the product. Normalization would make the first
+# compare differently on different machines and would silently rewrite the
+# second.
+* -text

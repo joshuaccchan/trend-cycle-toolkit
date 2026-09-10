@@ -1,0 +1,432 @@
+# The weekly watchdog. It answers one question - has the data moved on without
+# the estimates? - and it does so without MATLAB, without an API key, and
+# without touching a single number that gets published.
+#
+# Every Monday it fetches the two FRED series the published models consume -
+# CPIAUCSL, which the three trend inflation models read, and GDPC1, which the
+# two output-gap models read - plus the SPF long-run CPI forecast, works out the
+# newest quarter that is complete in all of them, compares that against the
+# vintage recorded in estimates/current/metadata.json, and opens or updates one
+# issue when the estimates have fallen behind or a source has moved off its
+# usual calendar. Then it appends a dated row to .github/freshness.csv and
+# commits it.
+#
+# BEHIND THE DATA IS NOT THE SAME AS OVERDUE, and the difference is most of the
+# design of this check. Two quarters are worked out every Monday: the newest one
+# complete in every source, and the newest one a release could reasonably cover
+# today, which is the last quarter that ended at least 60 days ago. BEA's
+# advance GDP estimate completes a quarter about a month before the release
+# covering it is due, so from late January to 1 March - and for the same four
+# weeks before every other release - the data run ahead of the published vintage
+# while nothing whatever is late. The issue is therefore opened only when BOTH
+# the data are ahead of the published vintage AND the release covering them is
+# due. The in-between case is reported as "data ready, release due <date>", in
+# the log, the job summary and the CSV, and nowhere else. Without that second
+# condition the watchdog would cry stale for a month every quarter, which is the
+# noise it exists to remove rather than produce.
+#
+# THAT WEEKLY COMMIT IS NOT INCIDENTAL. GitHub disables scheduled workflows in a
+# repository with no activity for 60 days, and a repository that publishes four
+# times a year will hit 60 quiet days every year between releases. The commit is
+# the activity. It is made with a fine-grained PAT rather than the default
+# GITHUB_TOKEN so that the push is attributed to a real account instead of to
+# github-actions[bot]; if FRESHNESS_PAT is not set the job still runs and still
+# commits with the default token, and prints a warning saying the auto-disable
+# protection is the part you have lost.
+#
+# WHICH LEAVES THE FAILURE MODE NOBODY SEES COMING: the PAT expires. GitHub's
+# fine-grained tokens are capped at one year by default, and there is no
+# no-expiry option in some organization settings. When it expires this job
+# starts failing its commit step, and 60 days after that GitHub silently
+# disables the schedule, and the watchdog is gone without ever having said so.
+# Two defenses: put the expiry date in RELEASE_CALENDAR.md next to the
+# estimation dates, and note that the last step of this job FAILS LOUDLY if
+# .github/freshness.csv has not been committed for more than 21 days. That check
+# runs after the append and the commit, on purpose - a red X that has already
+# healed itself is exactly what you want, because the alternative is a check
+# that blocks its own repair.
+#
+# Nothing here is required for the published estimates. If this workflow is
+# deleted the pipeline still runs; you simply have to remember the calendar
+# yourself.
+#
+# HOW THE FETCHES ARE VALIDATED. Never by HTTP status. The Philadelphia Fed
+# serves its data files from Sitecore media paths and answers 200 with an HTML
+# error page for a path that no longer exists - two wrong URLs came back as
+# identical HTML, both nominally successful. So every response is checked by
+# what it actually is: an xlsx must begin with the ZIP magic bytes PK\x03\x04,
+# and a FRED CSV must have a first line naming the series requested. Anything
+# starting with '<' is an error page whatever the status line says.
+#
+# ONE ENDPOINT IS NOT YET CONFIGURED. The SPF URL is left empty below until
+# phase 2 pins the verified path in core/+uc/+data/fetch_spf.m; until then the
+# SPF column reports "not-configured" rather than carrying a guessed URL that
+# would silently pass the magic-byte check by returning somebody else's file.
+name: Freshness watchdog
+
+on:
+  schedule:
+    - cron: '13 5 * * 1'   # Mondays 05:13 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0                                    # git log on the CSV needs history
+          token: ${{ secrets.FRESHNESS_PAT || github.token }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # How long since this job last committed? Measured before the append, so
+      # the number is honest; acted on at the end, so the repair lands first.
+      - name: Age of the last watchdog commit
+        id: age
+        run: |
+          f=.github/freshness.csv
+          if [ ! -f "$f" ]; then
+            echo "::notice::.github/freshness.csv does not exist yet - this run creates it"
+            echo "days=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          last=$(git log -1 --format=%ct -- "$f" || true)
+          if [ -z "$last" ]; then
+            echo "::notice::.github/freshness.csv is untracked - this run commits it for the first time"
+            echo "days=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          days=$(( ( $(date -u +%s) - last ) / 86400 ))
+          echo "last watchdog commit was $days days ago"
+          echo "days=$days" >> "$GITHUB_OUTPUT"
+
+      - name: Check the sources against the published vintage
+        id: check
+        run: |
+          python3 - <<'PY'
+          # No third-party packages: urllib and csv from the standard library,
+          # so this job cannot be broken by a dependency release on a Monday.
+          import csv, datetime, json, os, pathlib, sys, urllib.error, urllib.request
+
+          UA = "trend-cycle-toolkit freshness watchdog (https://github.com/joshuaccchan/trend-cycle-toolkit)"
+
+          # Quarterly averages of the series the five published models consume:
+          # CPIAUCSL for the three trend inflation models, GDPC1 for the two
+          # output-gap models. Nothing else is watched, because a series no
+          # model reads cannot leave the estimates behind the data, and a
+          # watchdog that reports on one would open issues nobody can act on.
+          # Unauthenticated - no FRED API key anywhere in this repository.
+          # fam=avg is the quarterly aggregation FRED itself applies.
+          FRED = "https://fred.stlouisfed.org/graph/fredgraph.csv?id={sid}&fq=Quarterly&fam=avg"
+          FRED_SERIES = ["CPIAUCSL", "GDPC1"]
+
+          # TBD (phase 2): set from the verified path used by
+          # core/+uc/+data/fetch_spf.m. Left empty rather than guessed.
+          SPF_URL = ""
+
+          STALE_AFTER_DAYS = 60      # a quarter is expected complete this long after it ends
+
+          def fetch(url):
+              req = urllib.request.Request(url, headers={"User-Agent": UA})
+              with urllib.request.urlopen(req, timeout=90) as r:
+                  return r.read()
+
+          def looks_like_html(body):
+              head = body[:512].lstrip()[:1].lower()
+              return head in (b"<",)
+
+          def parse_fred_csv(body, sid):
+              """Return (last_complete_date, note). Validates shape, not status."""
+              if looks_like_html(body):
+                  return None, "html error page"
+              if body[:2] == b"PK":
+                  return None, "zip, not csv"
+              try:
+                  text = body.decode("utf-8-sig")
+              except UnicodeDecodeError:
+                  return None, "not text"
+              rows = list(csv.reader(text.splitlines()))
+              if not rows or len(rows[0]) < 2:
+                  return None, "no csv header"
+              header = [h.strip().upper() for h in rows[0]]
+              if sid.upper() not in header:
+                  return None, "header does not name %s" % sid
+              col = header.index(sid.upper())
+              last = None
+              for row in rows[1:]:
+                  if len(row) <= col:
+                      continue
+                  value = row[col].strip()
+                  # FRED returns the running quarter as a present row with an
+                  # EMPTY value, and uses '.' for a genuine missing observation.
+                  # Both mean "not complete"; taking either as data is how a
+                  # 400*log difference turns into a NaN.
+                  if value in ("", "."):
+                      continue
+                  try:
+                      d = datetime.date.fromisoformat(row[0].strip())
+                  except ValueError:
+                      continue
+                  if last is None or d > last:
+                      last = d
+              if last is None:
+                  return None, "no complete observations"
+              return last, ""
+
+          def quarter_of(d):
+              return (d.year, (d.month - 1) // 3 + 1)
+
+          def qlabel(q):
+              return "%dQ%d" % q if q else ""
+
+          def qparse(s):
+              try:
+                  y, q = s.upper().split("Q")
+                  return (int(y), int(q))
+              except Exception:
+                  return None
+
+          def quarter_end(q):
+              y, i = q
+              m = i * 3
+              d = 31 if m in (3, 12) else 30
+              return datetime.date(y, m, d)
+
+          def release_due(q):
+              """The date the release covering quarter q goes out.
+
+              RELEASE_CALENDAR.md: the 1st of March, June, September and
+              December, each covering the quarter that ended two months
+              earlier. Q4 is the one that crosses the year end.
+              """
+              y, i = q
+              return datetime.date(y + 1 if i == 4 else y, {1: 6, 2: 9, 3: 12, 4: 3}[i], 1)
+
+          today = datetime.date.today()
+
+          # The newest quarter a release could reasonably cover today: the last
+          # one that ended at least STALE_AFTER_DAYS ago. On 1 March, that is the
+          # previous Q4 - which is exactly the quarter the March release
+          # estimates, and it is why the release calendar is the 1st of March,
+          # June, September and December rather than the 20th of the month
+          # before: BEA's second GDP estimate lands in the final week of the
+          # month, and on the 20th only the advance estimate exists.
+          expected = None
+          probe = quarter_of(today)
+          for _ in range(8):
+              if (today - quarter_end(probe)).days >= STALE_AFTER_DAYS:
+                  expected = probe
+                  break
+              y, i = probe
+              probe = (y - 1, 4) if i == 1 else (y, i - 1)
+
+          results = {}
+          problems = []
+
+          for sid in FRED_SERIES:
+              try:
+                  body = fetch(FRED.format(sid=sid))
+              except (urllib.error.URLError, OSError) as e:
+                  results[sid] = (None, "unreachable: %s" % e)
+                  problems.append("%s: unreachable (%s)" % (sid, e))
+                  continue
+              last, note = parse_fred_csv(body, sid)
+              results[sid] = (quarter_of(last) if last else None, note)
+              if last is None:
+                  problems.append("%s: %s" % (sid, note))
+
+          if SPF_URL:
+              try:
+                  body = fetch(SPF_URL)
+                  if body[:4] != b"PK\x03\x04":
+                      results["SPF_CPI10"] = (None, "not an xlsx (magic bytes %r)" % body[:4])
+                      problems.append("SPF_CPI10: the URL returned something that is not an xlsx - "
+                                      "the Philadelphia Fed answers 200 with HTML for a moved media path")
+                  else:
+                      # Reading the sheet needs a parser this job deliberately
+                      # does not install; the fetch check is the point here, and
+                      # the dated content is checked by the release run.
+                      results["SPF_CPI10"] = (None, "reachable, xlsx")
+              except (urllib.error.URLError, OSError) as e:
+                  results["SPF_CPI10"] = (None, "unreachable: %s" % e)
+                  problems.append("SPF_CPI10: unreachable (%s)" % e)
+          else:
+              results["SPF_CPI10"] = (None, "not-configured (phase 2)")
+
+          quarters = [q for q, _ in results.values() if q]
+          newest = min(quarters) if len(quarters) == len(FRED_SERIES) else None
+
+          meta_path = pathlib.Path("estimates/current/metadata.json")
+          published = None
+          if meta_path.exists():
+              try:
+                  published = qparse(str(json.loads(meta_path.read_text()).get("vintage", "")))
+              except Exception as e:
+                  problems.append("estimates/current/metadata.json is unreadable (%s)" % e)
+
+          # A single series lagging the others by two quarters or more is a
+          # source that has moved off calendar, not a quarter we are waiting for.
+          if newest and expected:
+              for sid in FRED_SERIES:
+                  q = results[sid][0]
+                  if q and q < expected:
+                      problems.append("%s is complete only through %s, behind the %s a release would use"
+                                      % (sid, qlabel(q), qlabel(expected)))
+
+          # Ahead of the published vintage is not the same as overdue. The
+          # issue is opened only when the data have moved on AND the release
+          # covering them was due. Between BEA's advance estimate and the
+          # release date the first is true and the second is not, for about a
+          # month, every quarter, and reporting that as staleness is the noise
+          # this file exists to remove. The header says why at length.
+          ahead = published is not None and newest is not None and newest > published
+          due   = published is not None and expected is not None and expected > published
+
+          if published is None:
+              status = "bootstrap"
+              headline = "no estimates published yet (estimates/current/metadata.json absent or unreadable)"
+              release_date = None
+          elif problems:
+              status = "source-problem"
+              headline = "a source needs attention"
+              release_date = release_due(expected) if expected else None
+          elif ahead and due:
+              status = "stale"
+              release_date = release_due(expected)
+              headline = "data through %s, estimates through %s - the %s release was due %s" % (
+                  qlabel(newest), qlabel(published), qlabel(expected), release_date.isoformat())
+          elif ahead:
+              status = "data-ready"
+              release_date = release_due(newest)
+              headline = "data ready through %s, estimates through %s - release due %s, nothing is late" % (
+                  qlabel(newest), qlabel(published), release_date.isoformat())
+          else:
+              status = "ok"
+              release_date = None
+              headline = "estimates through %s, nothing newer complete" % qlabel(published)
+
+          # The row is written whatever happened above - an unreachable source is
+          # itself the observation worth keeping, and the commit is what keeps
+          # the schedule alive.
+          f = pathlib.Path(".github/freshness.csv")
+          f.parent.mkdir(parents=True, exist_ok=True)
+          header = ["date", "checked_utc", "CPIAUCSL", "GDPC1",
+                    "SPF_CPI10", "newest_complete", "expected", "release_due",
+                    "published_vintage", "status", "note"]
+          new = not f.exists()
+          with f.open("a", newline="", encoding="utf-8") as fh:
+              w = csv.writer(fh)
+              if new:
+                  w.writerow(header)
+              w.writerow([
+                  today.isoformat(),
+                  datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                  qlabel(results["CPIAUCSL"][0]) or results["CPIAUCSL"][1],
+                  qlabel(results["GDPC1"][0]) or results["GDPC1"][1],
+                  results["SPF_CPI10"][1] or "ok",
+                  qlabel(newest), qlabel(expected),
+                  release_date.isoformat() if release_date else "",
+                  qlabel(published), status, "; ".join(problems),
+              ])
+
+          lines = ["| source | complete through | note |", "|---|---|---|"]
+          for sid in FRED_SERIES + ["SPF_CPI10"]:
+              q, note = results[sid]
+              lines.append("| `%s` | %s | %s |" % (sid, qlabel(q) or "-", note or ""))
+          table = "\n".join(lines)
+
+          body = (
+              "%s\n\n%s\n\n"
+              "- newest quarter complete in every scheduled source: **%s**\n"
+              "- a release run today would cover: **%s**\n"
+              "- the release covering that quarter is dated: **%s**\n"
+              "- `estimates/current/metadata.json` vintage: **%s**\n\n"
+              "Run `tools\\run_update.ps1` on the release machine. "
+              "See RELEASE_CALENDAR.md.\n\n"
+              "_Posted by the freshness watchdog; it edits this issue rather than opening another._"
+              % (headline, table, qlabel(newest) or "unknown",
+                 qlabel(expected) or "unknown",
+                 release_date.isoformat() if release_date else "unknown",
+                 qlabel(published) or "none")
+          )
+
+          pathlib.Path(os.environ["RUNNER_TEMP"], "freshness-issue.md").write_text(body, encoding="utf-8")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
+              out.write("status=%s\n" % status)
+              out.write("headline=%s\n" % headline)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as sm:
+              sm.write("### Freshness: %s\n\n%s\n\n%s\n" % (status, headline, table))
+
+          # The two cases this file exists to keep apart must be apart in the run
+          # log at a glance too, so one carries a warning annotation and the other
+          # a notice, and the status token in front of the headline differs.
+          annotation = {"stale": "::warning::", "source-problem": "::warning::",
+                        "data-ready": "::notice::", "bootstrap": "::notice::"}.get(status, "")
+          print("%s%s - %s" % (annotation, status, headline))
+          for p in problems:
+              print("  problem:", p)
+          PY
+
+      # One issue, reused. The title is the marker; do not edit it by hand.
+      # Only stale and source-problem open or update it. data-ready - the data
+      # complete but the release not yet due - is deliberately silent here: that
+      # is the ordinary state for the month before every release, and an issue
+      # arriving on schedule every quarter is the noise this file exists to
+      # remove. It is in the log, the job summary and the CSV instead.
+      - name: Open, update or close the issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATUS: ${{ steps.check.outputs.status }}
+          HEADLINE: ${{ steps.check.outputs.headline }}
+        run: |
+          title="Freshness watchdog: estimates behind the data"
+          num=$(gh issue list --state open --limit 50 --json number,title \
+                  --jq ".[] | select(.title == \"$title\") | .number" | head -1)
+          if [ "$STATUS" = "stale" ] || [ "$STATUS" = "source-problem" ]; then
+            if [ -n "$num" ]; then
+              gh issue comment "$num" --body-file "$RUNNER_TEMP/freshness-issue.md"
+              echo "updated issue #$num"
+            else
+              gh issue create --title "$title" --body-file "$RUNNER_TEMP/freshness-issue.md"
+            fi
+          elif [ -n "$num" ]; then
+            gh issue comment "$num" --body "Cleared: $HEADLINE"
+            gh issue close "$num"
+            echo "closed issue #$num"
+          else
+            echo "nothing to report: $HEADLINE"
+          fi
+
+      - name: Commit the log row
+        env:
+          HAVE_PAT: ${{ secrets.FRESHNESS_PAT != '' }}
+        run: |
+          if [ "$HAVE_PAT" != "true" ]; then
+            echo "::warning::FRESHNESS_PAT is not set - committing with the default token. The row is still written, but a push attributed to github-actions[bot] is weaker protection against the 60-day scheduled-workflow auto-disable. See this file's header."
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/freshness.csv
+          git diff --cached --quiet || git commit -m "Freshness check $(date -u +%F)"
+          git push
+          tail -2 .github/freshness.csv
+
+      # Last, so the commit above has already repaired the clock this measures.
+      - name: The watchdog must not itself go quiet
+        env:
+          DAYS: ${{ steps.age.outputs.days }}
+        run: |
+          days="$DAYS"
+          if [ "$days" -gt 21 ]; then
+            echo "::error::the last freshness commit was $days days ago - the schedule has been skipping. The usual cause is an expired FRESHNESS_PAT; the next is GitHub having disabled the schedule for inactivity. Today's run has committed, which restarts the clock, but check the token expiry and the Actions tab before trusting it."
+            exit 1
+          fi
+          echo "last watchdog commit was $days days ago - within tolerance"

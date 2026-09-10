@@ -1,0 +1,126 @@
+# Runs the unit suite, and the smoke run on the pinned vintages in tests/data,
+# on every push and pull request. The unit tests cover the functions in
+# core/+uc one at a time - the samplers, the data handling and the small
+# utilities - and they are what keeps the code honest between releases, because
+# the numbers this repository publishes every quarter come out of them.
+#
+# The stronger check is deliberately not here. The one-off comparison against
+# the published driver requires each
+# model function in core/+uc to reproduce the published driver whose method it
+# implements, draw for draw under a fixed seed. It is local-only, for the
+# reason set out below.
+#
+# MATLAB is licensed automatically here because this repository is PUBLIC:
+# matlab-actions licenses all products for public projects, with no token and no
+# account. This is not a guess - the same setup runs today in bvar-toolkit's
+# .github/workflows/unit-tests.yml, on the same release with the same two
+# products. A private fork would need an MLM_LICENSE_TOKEN secret instead, and
+# the batch-token route for private repositories is not open to individual
+# licenses, so a fork of this repository should stay public to run the suite.
+#
+# It is worth being clear about what that means for the published numbers: the
+# free public-repo license is an unannounced courtesy with no service level, and
+# this job is the only thing here that depends on it. The quarterly estimates
+# are produced locally by run_release.m on a licensed machine, and the local
+# run of this same suite is what gates them. If MathWorks withdraws the courtesy
+# tomorrow, this workflow goes red and nothing else in the repository changes.
+#
+# WHAT CI DOES NOT COVER, deliberately and visibly:
+#
+#   the one-off comparison - draw for draw against the published
+#     packages. Each test downloads the package from
+#     https://joshuachan.org/code.html at run time, runs the original driver on the
+#     data that package ships, and requires the corresponding function in
+#     core/+uc to produce identical draws from the same generator state. No
+#     published code is copied into this repository, and the price of that is a
+#     network fetch every time the suite runs. A push should not be gated on a
+#     fetch: a slow host, an outage, or a package moved to a new path would
+#     turn pull requests red with nothing in the code having changed, and a
+#     check that fails for reasons unrelated to the change is a check people
+#     learn to ignore. So the suite is LOCAL-ONLY and is skipped here by name.
+#     It is run by hand before a release and after any change to a model
+#     function.
+#
+#   Any run long enough to matter. Two of the five published models have a
+#     runtime figure at all - 2.6 and 5.7 minutes, on the author's own machine,
+#     taken from working copies of the drivers rather than at the settings this
+#     repository runs - and the other three have none. Nothing is scheduled
+#     until phase 1 measures it. The smoke run here is a short chain on a
+#     fixed seed against a stored summary: enough to catch a broken block, and
+#     not a substitute for the release run.
+#
+# Every skip is printed by the runner and written to the job summary, so a green
+# tick here never reads as full coverage.
+name: Unit tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The suites arrive in phase 4 (unit) and phase 5 (smoke). Until then this
+      # job says so and passes, rather than showing a red X on a repository that
+      # has nothing to test yet.
+      - name: What is here to run
+        id: preflight
+        run: |
+          have_unit=false
+          have_smoke=false
+          [ -f tests/unit/run_unit_tests.m ]   && have_unit=true
+          [ -f tests/smoke/run_smoke_tests.m ] && have_smoke=true
+          echo "have_unit=$have_unit"   >> "$GITHUB_OUTPUT"
+          echo "have_smoke=$have_smoke" >> "$GITHUB_OUTPUT"
+          if [ "$have_unit" = false ] && [ "$have_smoke" = false ]; then
+            echo "::notice::no MATLAB test suite yet - tests/unit/run_unit_tests.m arrives in phase 4"
+          fi
+          {
+            echo "### MATLAB CI"
+            echo ""
+            echo "| suite | in this run | why |"
+            echo "|---|---|---|"
+            echo "| \`tests/unit\` | $have_unit | the functions in core/+uc, one at a time |"
+            echo "| \`tests/smoke\` | $have_smoke | short chain, fixed seed, pinned vintage from tests/data |"
+            echo ""
+            echo "A green tick on this job is not full coverage. The release gate is the local run."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Set up MATLAB
+        if: steps.preflight.outputs.have_unit == 'true' || steps.preflight.outputs.have_smoke == 'true'
+        uses: matlab-actions/setup-matlab@v2
+        with:
+          release: R2025b
+          products: >
+            Statistics_and_Machine_Learning_Toolbox
+            Optimization_Toolbox
+
+      # Statistics is needed by nearly every sampler; Optimization by the psi
+      # block of the long-run-expectations model, which runs fminsearch and
+      # fminunc. The Parallel Computing Toolbox is deliberately NOT requested:
+      # the release run uses parfor across models on a four-core machine, the
+      # tests do not, and a two-core runner would gain nothing from a pool.
+      #
+      # UC_SKIP_TESTS takes individual test function names, and a name in it
+      # that matches no test is a hard error, on the bvar-toolkit precedent. It
+      # is unset here: there is nothing to skip, and setting it to a name that
+      # does not exist would turn this job red rather than skipping anything.
+      - name: Run the unit suite
+        if: steps.preflight.outputs.have_unit == 'true'
+        uses: matlab-actions/run-command@v2
+        env:
+          UC_CI: 'true'
+        with:
+          command: run('tests/unit/run_unit_tests.m')
+
+      - name: Run the smoke tests on the pinned vintages
+        if: steps.preflight.outputs.have_smoke == 'true'
+        uses: matlab-actions/run-command@v2
+        env:
+          UC_CI: 'true'
+        with:
+          command: run('tests/smoke/run_smoke_tests.m')

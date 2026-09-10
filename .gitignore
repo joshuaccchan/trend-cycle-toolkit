@@ -1,0 +1,19 @@
+# Figures and PDFs are committed here, deliberately. The product of this
+# repository is the published estimates and the charts drawn from them, so
+# estimates/figures/ and the PDF copy of every figure are tracked the way the
+# CSVs are: a reader who clones a vintage tag gets exactly what was on the
+# website that quarter. This follows the bayesian-macroeconometrics policy.
+# The opposite policy in chan-jeliazkov-2009, which ignores *.eps, *.mat and
+# *.pdf, is right for that repo and wrong for this one — there the figures are
+# byproducts a replication script regenerates, here they are the output.
+#
+# So this file ignores only operating-system clutter and local scratch. If a
+# file is worth looking at, it is worth committing.
+
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Scratch from local runs: run_release.m stages here and promotes out of it
+# only once the guardrails pass, so nothing under build/ is ever a release.
+build/

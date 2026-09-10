@@ -1,0 +1,132 @@
+cff-version: 1.2.0
+title: "trend-cycle-toolkit: US trend inflation, the output gap and trend output growth, re-estimated quarterly"
+message: >-
+  If you use the published series, cite this software record and the vintage you
+  took the numbers from — the vintage stamp is in
+  estimates/current/metadata.json and in the release tag. If you use one of the
+  models, cite the paper whose method it implements: the five references below,
+  mapped to models in README.md.
+type: software
+authors:
+  - family-names: Chan
+    given-names: Joshua C. C.
+    orcid: "https://orcid.org/0000-0003-3632-128X"
+    affiliation: Purdue University
+repository-code: "https://github.com/joshuaccchan/trend-cycle-toolkit"
+abstract: >-
+  Three US macroeconomic series — trend inflation, the output gap and trend
+  output growth — estimated from Bayesian unobserved components models and
+  re-estimated four times a year on current public data. Five models produce
+  them: three trend inflation specifications, an unobserved components model
+  with a second-order Markov trend that yields both an output gap and
+  annualized trend output growth, and an unobserved components model with
+  correlated trend and cycle errors and two breaks in trend output growth. The
+  MATLAB library behind the estimates is the uc package under core/+uc, which
+  holds the samplers, the state space draws, the data layer and the MCMC
+  diagnostics as one tested set of functions. Every release writes the series,
+  their credible bands and their diagnostics as CSV and freezes a copy of the
+  whole release, so that revisions can be read off the record. Inputs come from
+  FRED, the Philadelphia Fed's Survey of Professional Forecasters and the
+  Federal Reserve Board's FRB/US package.
+keywords:
+  - trend inflation
+  - output gap
+  - trend output growth
+  - trend-cycle decomposition
+  - unobserved components models
+  - Bayesian econometrics
+  - state space models
+  - stochastic volatility
+  - Markov chain Monte Carlo
+  - MATLAB
+# Two licenses, set out in README.md. MIT covers all code (core/, estimates/);
+# CC-BY-4.0 covers the estimates this repository publishes, which are a dataset.
+license:
+  - MIT
+  - CC-BY-4.0
+# The five method sources — the papers whose models are implemented here — plus
+# the companion repository. Each notes field names the model it corresponds to
+# and the published package that implements the method, where one exists.
+references:
+  - type: article
+    title: "Why Has US Inflation Become Harder to Forecast?"
+    authors:
+      - family-names: Stock
+        given-names: James H.
+      - family-names: Watson
+        given-names: Mark W.
+    journal: "Journal of Money, Credit and Banking"
+    year: 2007
+    volume: 39
+    issue: "s1"
+    start: 3
+    end: 33
+    notes: "Method source for uc.models.ucsv_sw07, which produces a trend inflation series. The implementation follows chapter10/UCSV.m in the book repository, https://github.com/joshuaccchan/bayesian-macroeconometrics."
+  - type: article
+    title: "A New Model of Trend Inflation"
+    authors:
+      - family-names: Chan
+        given-names: Joshua C. C.
+      - family-names: Koop
+        given-names: Gary
+      - family-names: Potter
+        given-names: Simon M.
+    journal: "Journal of Business and Economic Statistics"
+    year: 2013
+    volume: 31
+    issue: 1
+    start: 94
+    end: 106
+    notes: "Method source for uc.models.ar_trend_bound, which produces a trend inflation series. The published package that implements it is ARtrendbound.zip at https://joshuachan.org/code.html."
+  - type: article
+    title: "A New Model of Inflation, Trend Inflation, and Long-Run Inflation Expectations"
+    authors:
+      - family-names: Chan
+        given-names: Joshua C. C.
+      - family-names: Clark
+        given-names: Todd E.
+      - family-names: Koop
+        given-names: Gary
+    journal: "Journal of Money, Credit and Banking"
+    year: 2018
+    volume: 50
+    issue: 1
+    start: 5
+    end: 53
+    notes: "Method source for uc.models.biuc_lrexp, which produces a trend inflation series from inflation together with long-run inflation expectations. The published package that implements it is trend_IE_code.zip at https://joshuachan.org/code.html. Cite the journal version rather than the 2015 Cleveland Fed working paper."
+  - type: article
+    title: "Reconciling Output Gaps: Unobserved Components Model and Hodrick-Prescott Filter"
+    authors:
+      - family-names: Grant
+        given-names: Angelia L.
+      - family-names: Chan
+        given-names: Joshua C. C.
+    journal: "Journal of Economic Dynamics and Control"
+    year: 2017
+    volume: 75
+    start: 114
+    end: 121
+    notes: "Method source for uc.models.uc_2m, which produces both the output gap and annualized trend output growth. The published package that implements it is output_gap_2M_code.zip at https://joshuachan.org/code.html."
+  - type: article
+    title: "A Bayesian Model Comparison for Trend-Cycle Decompositions of Output"
+    authors:
+      - family-names: Grant
+        given-names: Angelia L.
+      - family-names: Chan
+        given-names: Joshua C. C.
+    journal: "Journal of Money, Credit and Banking"
+    year: 2017
+    volume: 49
+    issue: "2-3"
+    start: 525
+    end: 552
+    notes: "Method source for uc.models.ucur_break2, which produces an output gap from a model with correlated trend and cycle errors and two breaks in trend output growth. The published package that implements it is output_gap_code.zip at https://joshuachan.org/code.html."
+  - type: software
+    title: "bvar-toolkit: MATLAB code for large Bayesian VARs"
+    authors:
+      - family-names: Chan
+        given-names: Joshua C. C.
+        orcid: "https://orcid.org/0000-0003-3632-128X"
+    repository-code: "https://github.com/joshuaccchan/bvar-toolkit"
+    year: 2026
+    notes: "Companion repository, built to the same protocol. Several core/+uc/+util and core/+uc/+sv functions are imported from it rather than re-derived, and the precision sampler package of Chan and Jeliazkov (2009) is archived there rather than duplicated here."
