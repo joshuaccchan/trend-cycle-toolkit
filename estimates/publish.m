@@ -16,6 +16,9 @@
 %   'Mode'     'local' (default) or 'cloud-backup'. Changes nothing about which
 %              files are written, and records in metadata.json that a cloud run
 %              came off a hosted runner.
+%   'Dest'     where a promoted release lands. Default: this repository's
+%              estimates/. A test points it at a scratch directory; a release
+%              never passes it.
 %
 % THE GATE. publish refuses to promote unless report.pass is true, whatever
 % 'Promote' says. It still writes the staging tree, which is how a refused release
@@ -33,6 +36,9 @@
 %   trend_cycle_estimates.xlsx the three series in one workbook
 %   metadata.json              vintage, run time, git SHA, per-series URL, fetch
 %                              time and SHA-256, seed and settings per model
+%
+% The fetched inputs go to sources/, with a copy frozen inside the vintage, so a
+% vintage folder holds both the numbers and the data they came from.
 %
 % revisions/YYYYQq.csv is written once and never rewritten, and not at all for the
 % first release. figures/ holds a PNG and a PDF per series, committed on purpose.
@@ -54,6 +60,7 @@ arguments
     opts.Vintage {mustBeTextScalar} = ''
     opts.Promote (1,1) logical = false
     opts.Mode {mustBeTextScalar} = 'local'
+    opts.Dest {mustBeTextScalar} = ''
 end
 
 if isempty(opts.Vintage)
@@ -120,9 +127,12 @@ if opts.Promote
              'tree is at %s and holds the numbers and the report; nothing was ' ...
              'copied into estimates/.'], vintage, report.nfail, stagedir);
     end
-    root = fileparts(fileparts(mfilename('fullpath')));
-    promote(stagedir, fullfile(root, 'estimates'), vintage);
-    files{end+1} = fullfile(root, 'estimates');
+    dest = char(opts.Dest);
+    if isempty(dest)
+        dest = fullfile(fileparts(fileparts(mfilename('fullpath'))), 'estimates');
+    end
+    promote(stagedir, dest, vintage);
+    files{end+1} = dest;
 end
 
 files = files(:);
@@ -280,6 +290,11 @@ function promote(stagedir, dest, vintage)
 copyfile(fullfile(stagedir, 'current'), fullfile(dest, 'current'));
 copyfile(fullfile(stagedir, 'figures', 'current'), fullfile(dest, 'figures', 'current'));
 
+% The fetched inputs travel with the estimates. metadata.json records a SHA-256
+% per series, and without the files beside it that hash refers to nothing: the
+% staging tree is git-ignored and the next run deletes it.
+copyfile(fullfile(stagedir, 'sources'), fullfile(dest, 'sources'));
+
 v = fullfile(dest, 'vintages', vintage);
 if isfolder(v)
     error('uc:estimates:publish:vintageExists', ...
@@ -288,6 +303,7 @@ if isfolder(v)
          'archive a revision is measured against.'], v);
 end
 copyfile(fullfile(stagedir, 'vintages', vintage), v);
+copyfile(fullfile(stagedir, 'sources'), fullfile(v, 'sources'));
 copyfile(fullfile(stagedir, 'figures', 'vintages', vintage), ...
          fullfile(dest, 'figures', 'vintages', vintage));
 

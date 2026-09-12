@@ -191,6 +191,54 @@ verifyTrue(t, isfile(fullfile(d, 'current', 'metadata.json')));
 end
 
 
+function testPromoteWritesTheWholeRelease(t)
+% The promote path, driven through publish rather than reimplemented here.
+% metadata.json records a SHA-256 per series, so without the source files beside
+% it that hash refers to nothing: the staging tree is git-ignored.
+r = fake_result();
+rep = guardrails(r, struct([]), fake_data(), table(), 'Vintage', '2026Q2');
+stage = tempname; mkdir(stage);
+dest = tempname; mkdir(dest);
+c1 = onCleanup(@() rmdir(stage, 's')); %#ok<NASGU>
+c2 = onCleanup(@() rmdir(dest, 's'));  %#ok<NASGU>
+
+src.PCE = table((datetime(2000,1,1) + calquarters(0:2))', [100;101;102], ...
+    'VariableNames', {'date','value'});
+manifest = uc.data.vintage_stamp(src, stage, '2026Q2');
+publish(r, rep, table(), manifest, stage, 'Vintage', '2026Q2', ...
+    'Promote', true, 'Dest', dest);
+
+for f = {fullfile('current','trend_inflation.csv'), ...
+         fullfile('current','metadata.json'), ...
+         fullfile('sources','PCE.csv'), ...
+         fullfile('vintages','2026Q2','trend_inflation.csv'), ...
+         fullfile('vintages','2026Q2','sources','PCE.csv'), ...
+         fullfile('figures','current','trend_inflation.png')}
+    verifyTrue(t, isfile(fullfile(dest, f{1})), ...
+        sprintf('a promoted release must contain %s', f{1}));
+end
+end
+
+
+function testPromotingAVintageTwiceIsRefused(t)
+% A frozen vintage is written once: rewriting it would move the archive a
+% revision is measured against.
+r = fake_result();
+rep = guardrails(r, struct([]), fake_data(), table(), 'Vintage', '2026Q2');
+stage = tempname; mkdir(stage);
+dest = tempname; mkdir(dest);
+c1 = onCleanup(@() rmdir(stage, 's')); %#ok<NASGU>
+c2 = onCleanup(@() rmdir(dest, 's'));  %#ok<NASGU>
+src.PCE = table((datetime(2000,1,1) + calquarters(0:2))', [100;101;102], ...
+    'VariableNames', {'date','value'});
+manifest = uc.data.vintage_stamp(src, stage, '2026Q2');
+publish(r, rep, table(), manifest, stage, 'Vintage', '2026Q2', ...
+    'Promote', true, 'Dest', dest);
+verifyError(t, @() publish(r, rep, table(), manifest, stage, 'Vintage', '2026Q2', ...
+    'Promote', true, 'Dest', dest), 'uc:estimates:publish:vintageExists');
+end
+
+
 function testPublishRequiresAVintage(t)
 r = fake_result();
 rep = guardrails(r, struct([]), fake_data(), table(), 'Vintage', '2026Q2');
