@@ -1,0 +1,253 @@
+{
+  "vintage": "2026Q2",
+  "generated_utc": "2026-09-12T16:55:10Z",
+  "git_sha": "c5f7d5f141f1df27cea5f985eec32de100e887ba",
+  "mode": "local",
+  "guardrails": {
+    "pass": true,
+    "nfail": 0,
+    "seasonal": {
+      "applied": false,
+      "factor": 1,
+      "max_shift": null
+    }
+  },
+  "models": [
+    {
+      "model": "ucsv_sw07",
+      "seed": 1,
+      "sample_start": "1947Q2",
+      "sample_end": "2026Q2",
+      "ndraws": 10000,
+      "elapsed_seconds": 37.7298809,
+      "series": [
+        "trend_inflation"
+      ],
+      "settings": {
+        "model": "ucsv_sw07",
+        "nsim": 110000,
+        "burnin": 10000,
+        "thin": 10,
+        "seed": 1,
+        "sample_start": "1947Q2",
+        "compute_ml": false,
+        "ml_reps": 0,
+        "trunc_lag": 500,
+        "inputs": [
+          "DPCERD3Q086SBEA"
+        ],
+        "bounds": [],
+        "rho_bound": [],
+        "break_dates": []
+      },
+      "cites": "bayesian-macroeconometrics chapter10/UCSV.m (chain length is this repository's)",
+      "accept": {},
+      "versions": {
+        "matlab": "25.2.0.3150157 (R2025b) Update 4",
+        "release": "2025b"
+      }
+    },
+    {
+      "model": "ar_trend_bound",
+      "seed": 2,
+      "sample_start": "1947Q2",
+      "sample_end": "2026Q2",
+      "ndraws": 3000,
+      "elapsed_seconds": 49.6366346,
+      "series": [
+        "trend_inflation"
+      ],
+      "settings": {
+        "model": "ar_trend_bound",
+        "nsim": 35000,
+        "burnin": 5000,
+        "thin": 10,
+        "seed": 2,
+        "sample_start": "1947Q2",
+        "compute_ml": false,
+        "ml_reps": 0,
+        "trunc_lag": 150,
+        "inputs": [
+          "DPCERD3Q086SBEA"
+        ],
+        "bounds": [
+          0,
+          5
+        ],
+        "rho_bound": 1,
+        "break_dates": []
+      },
+      "cites": "ARtrendbound.zip/ARtrend_bound.m",
+      "accept": {
+        "tau": 0.87157142857142855,
+        "h": 0.82251428571428575,
+        "rho": 0.6534,
+        "sigrho": 0.92674285714285709,
+        "sigtau": 0.9788
+      },
+      "versions": {
+        "matlab": "25.2.0.3150157 (R2025b) Update 4",
+        "release": "2025b"
+      }
+    },
+    {
+      "model": "biuc_lrexp",
+      "seed": 3,
+      "sample_start": "1960Q1",
+      "sample_end": "2026Q1",
+      "ndraws": 36000,
+      "elapsed_seconds": 2121.9339972,
+      "series": [
+        "trend_inflation"
+      ],
+      "settings": {
+        "model": "biuc_lrexp",
+        "nsim": 400000,
+        "burnin": 40000,
+        "thin": 10,
+        "seed": 3,
+        "sample_start": "1960Q1",
+        "compute_ml": false,
+        "ml_reps": 0,
+        "trunc_lag": 500,
+        "inputs": [
+          "DPCERD3Q086SBEA",
+          "PTR"
+        ],
+        "bounds": [],
+        "rho_bound": [],
+        "break_dates": []
+      },
+      "cites": "trend_IE_code.zip/M1.m (chain length is this repository's)",
+      "accept": {
+        "b": 0.6668675,
+        "psi": 0.9360525,
+        "sigb2": 0.925795,
+        "rhod1": 0.7609475,
+        "rhod2": 0.7246725
+      },
+      "versions": {
+        "matlab": "25.2.0.3150157 (R2025b) Update 4",
+        "release": "2025b"
+      }
+    },
+    {
+      "model": "uc_2m",
+      "seed": 4,
+      "sample_start": "1947Q1",
+      "sample_end": "2026Q2",
+      "ndraws": 40000,
+      "elapsed_seconds": 175.0604718,
+      "series": [
+        "output_gap",
+        "trend_growth"
+      ],
+      "settings": {
+        "model": "uc_2m",
+        "nsim": 430000,
+        "burnin": 30000,
+        "thin": 10,
+        "seed": 4,
+        "sample_start": "1947Q1",
+        "compute_ml": false,
+        "ml_reps": 50000,
+        "trunc_lag": 500,
+        "inputs": [
+          "GDPC1"
+        ],
+        "bounds": [],
+        "rho_bound": [],
+        "break_dates": []
+      },
+      "cites": "output_gap_2M_code.zip/UCUR_2M.m (chain length is this repository's)",
+      "accept": {
+        "phi": 0.9999697674418605
+      },
+      "versions": {
+        "matlab": "25.2.0.3150157 (R2025b) Update 4",
+        "release": "2025b"
+      }
+    },
+    {
+      "model": "ucur_break2",
+      "seed": 5,
+      "sample_start": "1947Q1",
+      "sample_end": "2026Q2",
+      "ndraws": 10000,
+      "elapsed_seconds": 40.3828765,
+      "series": [
+        "output_gap"
+      ],
+      "settings": {
+        "model": "ucur_break2",
+        "nsim": 110000,
+        "burnin": 10000,
+        "thin": 10,
+        "seed": 5,
+        "sample_start": "1947Q1",
+        "compute_ml": false,
+        "ml_reps": 50000,
+        "trunc_lag": 500,
+        "inputs": [
+          "GDPC1"
+        ],
+        "bounds": [],
+        "rho_bound": [],
+        "break_dates": [
+          "1973Q1",
+          "2007Q1"
+        ]
+      },
+      "cites": "output_gap_code.zip/UCUR_break2.m",
+      "accept": {
+        "phi": 1
+      },
+      "versions": {
+        "matlab": "25.2.0.3150157 (R2025b) Update 4",
+        "release": "2025b"
+      }
+    }
+  ],
+  "sources": [
+    {
+      "name": "PCE",
+      "file": "sources/PCE.csv",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DPCERD3Q086SBEA&fq=Quarterly&fam=avg",
+      "fetched": "12-Sep-2026 16:18:24",
+      "rows": 318,
+      "first": "1947Q1",
+      "last": "2026Q2",
+      "sha256": "d1240ea0bd6d382d14d3b1892b227aa12e560c9e748368add7d66708324d8131"
+    },
+    {
+      "name": "GDPC1",
+      "file": "sources/GDPC1.csv",
+      "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GDPC1",
+      "fetched": "12-Sep-2026 16:18:24",
+      "rows": 318,
+      "first": "1947Q1",
+      "last": "2026Q2",
+      "sha256": "c8335f46e0628add80cc33db3b92e32f516e4188f6bdeeb4fedcfdb6f782ae5f"
+    },
+    {
+      "name": "PTR",
+      "file": "sources/PTR.csv",
+      "url": "https://www.federalreserve.gov/econres/files/data_only_package.zip",
+      "fetched": "12-Sep-2026 16:18:26",
+      "rows": 233,
+      "first": "1968Q1",
+      "last": "2026Q1",
+      "sha256": "cf482fd848dd476c1329db795120316875fd0d275ad84a51ef1a356386b8ed3d"
+    },
+    {
+      "name": "PTR_EXPECT",
+      "file": "sources/PTR_EXPECT.csv",
+      "url": "",
+      "fetched": null,
+      "rows": 265,
+      "first": "1960Q1",
+      "last": "2026Q1",
+      "sha256": "cc1acaf358b6f93a8a5969903614f7f3195c77092d4469cc56937df0d72da69b"
+    }
+  ]
+}
