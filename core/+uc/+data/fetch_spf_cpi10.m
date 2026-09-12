@@ -4,32 +4,22 @@ function tbl = fetch_spf_cpi10(opts)
 %   tbl = uc.data.fetch_spf_cpi10()
 %   tbl = uc.data.fetch_spf_cpi10('File', 'median_cpi10_level.xlsx')
 %
-% Returns a table with date (quarter start) and value (percent per year), covering
-% the quarters the survey reports a number for. It is one of the two pieces
-% uc.data.build_ptrcpi splices, and through PTRCPI it is what biuc_lrexp reads.
+% Returns a table of date (quarter start) and value (percent per year), covering
+% the quarters the survey reports a number for, from the Philadelphia Fed's
+% median_cpi10_level.xlsx.
 %
-% The Philadelphia Fed publishes one workbook per SPF variable, this one holding a
-% single sheet named Median_Level with columns YEAR, QUARTER and CPI10:
+% NOT ON THE RELEASE PATH. The models read PCE inflation with FRB/US PTR, which
+% needs no splice. This is kept because it is the only public long-run CPI
+% expectation, so a CPI variant of biuc_lrexp would start here - at the cost of
+% beginning in 1991Q4 rather than 1960Q1.
 %
-%   https://www.philadelphiafed.org/-/media/frbp/assets/surveys-and-data/
-%     survey-of-professional-forecasters/data-files/files/median_cpi10_level.xlsx
-%
-% TWO FAILURES THIS GUARDS AGAINST, both observed on the live source:
-%
-%   1. HTTP 200 WITH AN HTML ERROR PAGE. The site answers an unknown media path
-%      with a styled error page and a success status, so a status check passes a
-%      document that is not a spreadsheet. The download is checked for the ZIP
-%      magic bytes 50 4B 03 04, which every xlsx begins with, before anything
-%      reads it.
-%
-%   2. THE LITERAL STRING #N/A BEFORE 1991Q4. The survey did not ask this question
-%      before then, and the workbook fills those cells with #N/A: 92 such rows
-%      against 140 numeric on 2026-09-09. Read as numbers they are NaN, read as
-%      text they are a string sitting in a numeric column. They are dropped here,
-%      and the first numeric quarter is reported back through UserData so a caller
-%      can assert on it.
-%
-% Those dropped rows are why PTRCPI cannot be built from the SPF alone.
+% TWO FAILURES THIS GUARDS AGAINST, both observed:
+%   1. HTTP 200 with an HTML error page. The site answers an unknown media path
+%      with a styled error page and a success status, so the download is checked
+%      for the ZIP magic bytes 50 4B 03 04 before anything reads it.
+%   2. The literal string #N/A before 1991Q4, 92 rows against 140 numeric. Read as
+%      numbers they are NaN, read as text they are a string in a numeric column.
+%      They are dropped, and the first numeric quarter reported through UserData.
 
 arguments
     opts.File (1,:) char = ''

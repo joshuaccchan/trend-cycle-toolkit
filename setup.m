@@ -2,42 +2,18 @@
 %
 %   run setup.m          (from anywhere; the script locates the repo itself)
 %
-% Adds the repo root and core/ to the path. core/ holds the MATLAB package
-% folder +uc, so everything in the library is called with the package prefix
-% once core/ is on the path:
+% Adds the repo root and core/ to the path, and checks the three toolboxes. core/
+% holds the package folder +uc, so everything is called with the prefix:
 %
-%   out = uc.models.ucsv_sw07(y, nsim, burnin);
-%   h   = uc.sv.ksc_rw_h0(ystar, h, sig, h0);
+%   out = uc.models.ucsv_sw07(y);
 %   raw = uc.data.fetch_fred('CPIAUCSL', 'Quarterly');
 %
-% The prefix is 'uc' for unobserved components, the class of model this library
-% implements. The repository is named for what it publishes - trend inflation,
-% the output gap and trend output growth - and the package for how those series
-% are produced. The two names differ on purpose; it is not an inconsistency to
-% be tidied away later.
+% The root goes on as well, because run_release.m sits there and should resolve as
+% a command from any folder. The path change lasts for the session only.
 %
-% Nothing is added permanently - the path change lasts for the session. Add this
-% line to your own startup.m if you want it every time:
-%
-%   run('<path-to-repo>/setup.m')
-%
-% The repo root goes on the path as well, because the release driver sits there.
-% run_release.m is a top-level file, so adding the root is what makes the closing
-% quick-start line below true: run_release resolves as a command from whatever
-% folder you happen to be in. The root holds exactly two .m files, setup.m and
-% run_release.m, so this adds two unambiguous names and no generic ones.
-%
-% NOT put on the path: estimates/. Its files carry deliberately generic names -
-% preset.m, publish.m, revisions.m - and publish.m shadows a MATLAB built-in of
-% the same name for as long as the folder is visible. run_release.m adds
-% estimates/ to the path for the duration of one release run and removes it
-% again, which is the only time those names need to resolve.
-%
-% STATUS: this repository is a skeleton - the library and the estimates pipeline
-% are imported over later phases (see README.md). This script is written to be
-% honest about that: folders that do not exist yet are reported rather than
-% silently added, and the closing lines offer only commands that exist on disk
-% at the time you run it.
+% NOT put on the path: estimates/. Its files carry generic names - preset.m,
+% publish.m, revisions.m - and publish.m shadows a MATLAB built-in for as long as
+% the folder is visible. run_release.m adds it for one run and removes it again.
 
 uc_root = fileparts(mfilename('fullpath'));
 
@@ -54,9 +30,7 @@ if isfolder(uc_core)
     addpath(uc_core);
 else
     warning('uc:setup:missingFolder', ...
-        ['core/ does not exist and was not added to the path. The library is ' ...
-         'extracted into it in phase 4; until then nothing under uc.* ' ...
-         'resolves.']);
+        'core/ does not exist and was not added to the path, so nothing under uc.* resolves.');
 end
 clear uc_core
 
@@ -107,24 +81,22 @@ end
 if isfolder(fullfile(uc_root, 'core'))
     fprintf('trend-cycle-toolkit: repo root and core/ added to the path (%s).\n', uc_root);
 else
-    fprintf('trend-cycle-toolkit: repo root added to the path (%s). core/ arrives in phase 4.\n', uc_root);
+    fprintf('trend-cycle-toolkit: repo root added to the path (%s). core/ is missing.\n', uc_root);
 end
 
-% Offer only commands that exist. Everything here is imported over several
-% phases, and a quick-start line pointing at a file that is not there yet is
-% worse than no line at all.
+% Offer only commands that exist: a quick-start line pointing at a file that is
+% not there is worse than no line at all.
 if isfile(fullfile(uc_root, 'tests', 'unit', 'run_unit_tests.m'))
     fprintf('  run tests:    run(fullfile(''%s'',''tests'',''unit'',''run_unit_tests.m''))\n', uc_root);
 else
-    fprintf('  run tests:    tests/unit/run_unit_tests.m not written yet (phase 4).\n');
+    fprintf('  run tests:    tests/unit/run_unit_tests.m is missing.\n');
 end
 
 if isfile(fullfile(uc_root, 'run_release.m'))
-    fprintf(['  release run:  run_release      (three series from five models, ' ...
-             'quarterly; a skeleton\n                               until ' ...
-             'phase 5 - read its header)\n']);
+    fprintf(['  release run:  run_release      (three series from five ' ...
+             'models, quarterly)\n']);
 else
-    fprintf('  release run:  run_release.m not written yet (phase 5).\n');
+    fprintf('  release run:  run_release.m is missing.\n');
 end
 
 % One absence worth reporting, which breaks nothing, so it is a note rather

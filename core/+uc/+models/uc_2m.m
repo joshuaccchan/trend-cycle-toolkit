@@ -10,9 +10,8 @@ function out = uc_2m(y, opts)
 % what the Hodrick-Prescott filter implies, and the cycle is allowed to be serially
 % correlated, which the filter does not allow.
 %
-% y is 100*log of real output, from uc.data.fetch_fred('GDPC1') passed through the
-% log transform. Univariate: nothing else enters. Two of the three published series
-% come out of one set of draws:
+% y is 100*log of real output. Univariate: nothing else enters. Two of the three
+% published series come out of one set of draws:
 %
 %   out.gap    y_t - tau_t, the output gap
 %   out.mu     4*(tau_t - tau_{t-1}), annualized trend output growth
@@ -23,24 +22,16 @@ function out = uc_2m(y, opts)
 %   'Thin'    keep every Thin-th retained draw (default 10)
 %   'Seed'    rng seed                         (default 1)
 %
-% NSim is the TOTAL everywhere in this repository, which the published drivers do
-% not agree on: this package's nsims = 100000 is the RETAINED count and it loops
-% 1:nsims+burnin, while ARtrend_bound.m's nloop = 35000 is the total. The published
-% settings for this model are NSim = 110000 with Burnin = 10000.
+% NSim is the TOTAL everywhere in this repository. The published drivers do not
+% agree on that: this package's nsims = 100000 is the RETAINED count and it loops
+% 1:nsims+burnin, while ARtrend_bound.m's nloop = 35000 is the total.
 %
-% The body is UCUR_2M.m unchanged except that data and settings arrive as arguments
-% instead of from main_script.m, the legacy rand('state',...) seed becomes
-% rng(opts.Seed,'threefry'), the marginal likelihood is out, and there is no
-% plotting, printing or timing. Dropping the ML removes 50000 importance
-% replications, the expensive part of the published run.
+% From output_gap_2M_code.zip/UCUR_2M.m.
 %
-% The prior normalization is kept: the 50000 draws below estimate phi_const, the
-% mass of the stationarity region, which only the marginal likelihood ever reads.
-% Dropping it would use 100000 fewer normals and change every draw that follows.
-%
-% Verified 2026-09-09 against the published script on the data
-% output_gap_2M_code.zip ships, 600 sweeps under seed 7: bitwise identical draws,
-% and the gap matches y - tau exactly.
+% The 50000 draws in the prior block estimate phi_const, the mass of the
+% stationarity region, which only the marginal likelihood reads. They are kept
+% because dropping them would use 100000 fewer normals and change every draw that
+% follows.
 
 arguments
     y (:,1) double

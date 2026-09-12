@@ -10,12 +10,11 @@
 % Kim, Shephard and Chib (1998), and drawing the whole path in one block from a
 % banded precision matrix. Draws rand(T,1) then randn(T,1), in that order.
 %
-% Lifted verbatim from chapter10/SVRW.m in joshuaccchan/bayesian-macroeconometrics,
-% renamed.
+% From chapter10/SVRW.m in joshuaccchan/bayesian-macroeconometrics.
 %
-% The same sampler is published in joshuaccchan/bvar-toolkit as bvar.sv.ksc_rw_h0
-% taking (Ystar, h, sig, h0), arguments three and four transposed. Calling either
-% with the other's arguments raises no error and exchanges the prior mean with the
+% joshuaccchan/bvar-toolkit publishes the same sampler as bvar.sv.ksc_rw_h0 taking
+% (Ystar, h, sig, h0), arguments three and four transposed. Calling either with the
+% other's arguments raises no error and exchanges the prior mean with the
 % innovation variance.
 
 function h = ksc_rw_h0(ystar, h, h0, sigh2)

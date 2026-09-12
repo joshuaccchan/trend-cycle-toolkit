@@ -5,21 +5,18 @@ function [out, span] = align_by_date(src, varargin)
 %   [out, span] = uc.data.align_by_date(src, 'Start', '1960Q1')
 %
 % src is a struct whose fields are series tables, each with date and value columns.
-% out is a struct with the same field names, each holding a column vector, all of
-% the same length and all on the axis span.date. span also carries first and last
-% as 'YYYYQq'.
+% out has the same field names, each a column vector, all the same length and all
+% on the axis span.date. span also carries first and last as 'YYYYQq'.
 %
-% The default span is the INTERSECTION of the inputs: it starts at the latest first
-% quarter and ends at the earliest last one, so every returned column is complete
-% and no model is handed a NaN. 'Start' asks for a later start and errors when the
-% data cannot reach it; a model wanting a shorter sample says so through its sample
-% start in estimates/preset.m.
+% The default span is the INTERSECTION of the inputs, so every returned column is
+% complete and no model is handed a NaN. 'Start' asks for a later start and errors
+% when the data cannot reach it, which is how run_estimates asserts each model's
+% configured sample start.
 %
-% The quarterly axis is checked here to be gapless and running forward. Two things
-% downstream depend on that: estimates/resolve_break_dates.m turns break quarters
-% into ROW INDICES, so a missing quarter moves every break after it, and
-% uc.data.annualized_log_diff differences adjacent rows, which is a quarterly rate
-% only when the rows really are adjacent quarters.
+% The axis is checked here to be gapless and running forward. Two things depend on
+% that: resolve_break_dates turns break quarters into ROW INDICES, so a missing
+% quarter moves every break after it, and uc.data.annualized_log_diff differences
+% adjacent rows, which is a quarterly rate only when the rows are adjacent quarters.
 
 p = inputParser;
 p.addParameter('Start', '', @(x) ischar(x) || isstring(x) || isdatetime(x));

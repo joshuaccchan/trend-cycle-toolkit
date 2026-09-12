@@ -5,7 +5,7 @@
 % Returns the T-by-T banded lower-triangular matrix with ones on the diagonal and
 % -psi(j) on the j-th subdiagonal, so that Hpsi*e applies the MA(q) filter.
 %
-% Lifted verbatim from buildHpsi.m in trend_IE_code.zip, renamed.
+% From buildHpsi.m in trend_IE_code.zip.
 
 function Hpsi = build_hpsi(psi,T)
 q = length(psi);

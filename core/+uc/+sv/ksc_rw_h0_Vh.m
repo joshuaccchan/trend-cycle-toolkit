@@ -10,11 +10,10 @@
 % uc.sv.ksc_rw_h0 is a different model: it has no Vh, so its precision diagonal is
 % flat at 1/sig throughout, while here the first entry is 1/Vh.
 %
-% Lifted verbatim from SVRW.m in trend_IE_code.zip, renamed; uc.models.biuc_lrexp
-% is its only caller. Three of the packages this repository draws on ship a
-% different sampler under the name SVRW.m, with different arities and different
-% meanings for the same argument positions, which is why nothing here carries that
-% name.
+% From SVRW.m in trend_IE_code.zip. uc.models.biuc_lrexp is its only caller. Three
+% of the packages this repository draws on ship a different sampler under the name
+% SVRW.m, with different arities and different meanings for the same argument
+% positions, which is why nothing here carries that name.
 
 function h = ksc_rw_h0_Vh(Ystar,h,sig,h0,Vh)
 

@@ -15,12 +15,10 @@ function out = ucsv_sw07(y, opts)
 %
 % y is annualized percent inflation from uc.data.annualized_log_diff.
 %
-% The implementation follows chapter10/UCSV.m in
-% joshuaccchan/bayesian-macroeconometrics, which puts inverse-gamma priors on the
-% two state-innovation variances. The non-centered version, with normal priors on
-% the signed standard deviations, is a different model: that prior puts positive
-% density at zero and so lets the posterior shrink the time variation away. It is
-% not in this repository's set.
+% The priors on the two state-innovation variances are inverse-gamma. The
+% non-centered version, with normal priors on the signed standard deviations, is a
+% different model: that prior puts positive density at zero and so lets the
+% posterior shrink the time variation away. It is not in this repository's set.
 %
 % OPTIONS
 %   'NSim'    TOTAL sweeps, burn-in included   (default 51000)
@@ -28,15 +26,7 @@ function out = ucsv_sw07(y, opts)
 %   'Thin'    keep every Thin-th retained draw (default 10)
 %   'Seed'    rng seed                         (default 1)
 %
-% The book's driver sets nsim = 50000 with burnin = 1000 and loops 1:(nsim+burnin),
-% so its nsim is the retained count and NSim here is 51000.
-%
-% The body is byte-identical to that driver except that data and settings arrive as
-% arguments, the seed is set from opts.Seed instead of the book's rng(42), and
-% there is no plotting: uc.sv.ksc_rw_h0 and uc.sv.rw_gaussian_approx are
-% chapter10's own helpers lifted verbatim, so the call sites below are unchanged.
-% Verified 2026-09-09 against the book's driver on 317 quarters of CPI inflation
-% fetched by uc.data, 600 sweeps under seed 11: bitwise identical draws.
+% From chapter10/UCSV.m in joshuaccchan/bayesian-macroeconometrics.
 
 arguments
     y (:,1) double

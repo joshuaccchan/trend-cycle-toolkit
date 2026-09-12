@@ -1,7 +1,7 @@
 # Runs the unit suite, and the smoke run on the pinned vintages in tests/data,
 # on every push and pull request. The unit tests cover the functions in
 # core/+uc one at a time - the samplers, the data handling and the small
-# utilities - and they are what keeps the code honest between releases, because
+# utilities - and they are what stands between releases, because
 # the numbers this repository publishes every quarter come out of them.
 #
 # The stronger check is deliberately not here. The one-off comparison against
@@ -41,13 +41,10 @@
 #     It is run by hand before a release and after any change to a model
 #     function.
 #
-#   Any run long enough to matter. Two of the five published models have a
-#     runtime figure at all - 2.6 and 5.7 minutes, on the author's own machine,
-#     taken from working copies of the drivers rather than at the settings this
-#     repository runs - and the other three have none. Nothing is scheduled
-#     until phase 1 measures it. The smoke run here is a short chain on a
-#     fixed seed against a stored summary: enough to catch a broken block, and
-#     not a substitute for the release run.
+#   Any run long enough to matter. A release takes 38.7 minutes on the release
+#     machine, almost all of it biuc_lrexp at 37.4; the smoke run here is a
+#     short chain on a fixed seed against a stored summary, enough to catch a
+#     broken block and not a substitute for the release run.
 #
 # Every skip is printed by the runner and written to the job summary, so a green
 # tick here never reads as full coverage.

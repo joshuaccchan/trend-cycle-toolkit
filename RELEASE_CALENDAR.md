@@ -1,8 +1,7 @@
 # Release calendar
 
 The series in `estimates/current/` are re-estimated four times a year and frozen as a vintage
-each time. Nothing is in place yet: the pipeline arrives in phase 5 and the first release below
-is contingent on it.
+each time. No estimate has been published yet.
 
 ## The dates
 
@@ -19,17 +18,17 @@ ended two months earlier.
 **Why the 1st and not earlier.** BEA publishes three estimates of each quarter's real GDP about a
 month apart. On the 20th of the month only the *advance* estimate exists; the second lands in the
 last week. Releasing before then would build every gap and every trend-growth path on a number
-BEA revises a week later. GDP is the binding input and the only reason for the date — CPI is
-final about six weeks ahead, and the SPF median CPI10 arrives mid-February, May, August and
-November.
+BEA revises a week later. GDP is the binding input and the only reason for the date. The PCE
+price index arrives in the same NIPA release, so both inputs to the five models move together
+and neither can be had earlier than the other.
 
-The FRB/US package is the one input a release does **not** wait for. `PTRCPI` uses `PTR` only
-before 2006Q1 and the SPF median after, so a stale package affects frozen history only. It is
-still fetched and validated every run, because the Board occasionally revises that history and
-reorganizes `HISTDATA.TXT`'s 366-column layout.
+`PTR` is the input a release now waits for. It is the whole of `biuc_lrexp`'s expectations
+series rather than its early half, so when the Board has not refreshed the FRB/US package
+that model runs a quarter behind the other four. The release does not stall for it: the other
+four publish on time and `biuc_lrexp` catches up at the next vintage.
 
-Agency release dates are deliberately not tabulated here — check the BLS, BEA and Philadelphia
-Fed calendars in the week before a release. A plausible-looking date invented here would be worse
+Agency release dates are deliberately not tabulated here — check the BEA and Federal Reserve
+Board calendars in the week before a release. A plausible-looking date invented here would be worse
 than none.
 
 ## What a release checks before it publishes
@@ -62,7 +61,7 @@ Two breakages are scheduled rather than accidental:
 
 - **February, every year.** BLS re-estimates five years of CPI seasonal factors, which moves the
   seasonally adjusted history itself. The scale is not small: recomputing a 2013-vintage inflation
-  series from today's `CPIAUCSL` gives differences under 0.011pp before 2000 but up to 0.84pp in
+  series from today's price index gives differences under 0.011pp before 2000 but up to 0.84pp in
   2010-2011. The 1 March release therefore runs with `'SeasonalRevision', true`, which widens the
   tolerance and records the widening in that vintage's `metadata.json`.
 - **The next GDP comprehensive revision.** Rebasing shifts `100*log(GDPC1)` by a constant at every
@@ -76,10 +75,21 @@ behaving as specified, and the first thing to look at if its gap starts to diver
 
 ## Runtime
 
-None of the five models has a measured runtime. **A model with no measured runtime does not go on
-the schedule**, which today means none of them. Phase 1 times each one as this repository
-implements it, at the settings in `estimates/preset.m` and so with the marginal likelihood off,
-and records the figures here.
+**A model with no measured runtime does not go on the schedule.** Measured 2026-09-11 on the
+release machine, at the settings in `estimates/preset.m` and so with the marginal likelihood off:
+
+| model | minutes |
+|---|---|
+| `ucsv_sw07` | 0.4 |
+| `ucur_break2` | 0.8 |
+| `uc_2m` | 0.9 |
+| `ar_trend_bound` | 1.1 |
+| `biuc_lrexp` | 3.4 |
+
+Six and a half minutes in series, four with two workers, so a quarterly run is not constrained by
+time. `model_lists` in `run_release.m` still lists no model as measured, and that stays until G7
+is settled: three of the five fail it at these chain lengths, so a longer chain would change
+these figures.
 
 ## If a release slips
 

@@ -13,30 +13,25 @@ function out = ar_trend_bound(y, y0, opts)
 %
 % y is annualized percent inflation over the estimation sample and y0 the one
 % presample observation the measurement equation needs, both from
-% uc.data.annualized_log_diff. The bounds are in those same units, so inflation
-% expressed as a proportion sits outside the trend's support and the sampler
-% rejects forever without saying why.
+% uc.data.annualized_log_diff. The bounds are in those same units, so inflation as
+% a proportion sits outside the trend's support and the sampler rejects forever
+% without saying why.
 %
 % Returns a struct: thinned draws of tau, rho and h, the three state-innovation
 % variances, acceptance counts, the seed, and the settings used.
 %
 % OPTIONS
-%   'NSim'    total sweeps including burn-in   (default 35000, the published value)
-%   'Burnin'  sweeps discarded                 (default  5000, the published value)
+%   'NSim'    total sweeps including burn-in   (default 35000)
+%   'Burnin'  sweeps discarded                 (default  5000)
 %   'Thin'    keep every Thin-th retained draw (default 10)
 %   'Seed'    rng seed                         (default 1)
-%   'Bounds'  [a b] on the trend               (default [0 5], the published value)
-%   'RhoBound' upper bound on rho              (default 1, the published value)
+%   'Bounds'  [a b] on the trend               (default [0 5])
+%   'RhoBound' upper bound on rho              (default 1)
 %
-% The body is ARtrend_bound.m from ARtrendbound.zip with the sampler untouched.
-% Four things changed, each marked [uc] where it occurs: data and settings arrive
-% as arguments, the clock seed becomes rng(opts.Seed,'threefry'), the chain is
-% thinned on the way out, and the plotting, printing and timing are gone. Verified
-% 2026-09-09 against the published script on the data that package ships, 600
-% sweeps under seed 1: bitwise identical draws.
+% From ARtrendbound.zip/ARtrend_bound.m. Lines that differ from it are marked [uc].
 %
-% The published sampler assigns a variable named `uc` in the tau block, shadowing
-% the uc package for the rest of the scope. This model calls no helper.
+% The body assigns a variable named `uc`, which shadows the uc package for the
+% rest of the scope. This model calls no helper.
 
 arguments
     y (:,1) double

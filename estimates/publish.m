@@ -1,101 +1,312 @@
-% publish - summarize a passing run, write the staging tree, promote it.
+% publish - write a release into the staging tree, and promote it if it passed.
 %
 %   files = publish(results, report, revs, manifest, stagedir, 'Vintage', v)
 %   files = publish(results, report, revs, manifest, stagedir, 'Vintage', v, ...
 %                   'Promote', true)
 %
-% The five positional arguments are everything a release consists of: the estimation
-% output from run_estimates.m, the guardrail report from guardrails.m, the revision
-% table from revisions.m, the source-vintage record from uc.data.vintage_stamp, and
-% the staging directory run_release.m created for this run. All five are required.
+% The five positional arguments are everything a release consists of: the output of
+% run_estimates, guardrails, revisions, uc.data.vintage_stamp, and the staging
+% directory run_release made. All five are required. Returns the files written, in
+% write order.
 %
-% NAME-VALUE OPTIONS
-%   'Vintage'  'YYYYQq', required. It names the frozen folder under vintages/ and it
-%              is stamped into metadata.json. It is passed in, never parsed back
-%              out of the staging path, because a vintage read off a directory name
-%              is a vintage that can be renamed.
-%   'Promote'  logical, default false. False writes the staging tree and stops, which
-%              is what step 8 of the release does; true copies it into the tracked
-%              tree, which is what step 9 does once the guardrails are green.
-%   'Mode'     'local' (default) or 'cloud-backup', from run_release.m. It changes
-%              nothing about which files are written and one thing about what they
-%              record: under 'cloud-backup', metadata.json states that the run came
-%              off a hosted runner and is not byte-identical to a local one, so a
-%              reader of the archive can tell which vintages were produced on the
-%              release machine and which were not.
-%
-% Returns the list of files written, in the order they were written, which
-% tools/run_update.ps1 prints and then commits. Nothing else in the pipeline writes
-% into current/, vintages/, revisions/ or figures/ - revisions.m computes its table
-% and hands it back rather than writing it, so that a release refused at step 7
-% cannot have left a revision file in the tracked tree at step 6.
-%
-% NAME CLASH, DELIBERATE. MATLAB ships a built-in publish (code-to-HTML). This file
-% shadows it whenever estimates/ is on the path, which is one of the reasons setup.m
-% does not put estimates/ on the path at all; run_release.m adds it for the duration
-% of one release run and removes it again. If you need the built-in in a session
-% where this one is visible, qualify it or step out of the folder.
+% OPTIONS
+%   'Vintage'  'YYYYQq', required. Passed in, never parsed out of the staging path.
+%   'Promote'  logical, default false. False writes the staging tree and stops;
+%              true copies it into the tracked tree.
+%   'Mode'     'local' (default) or 'cloud-backup'. Changes nothing about which
+%              files are written, and records in metadata.json that a cloud run
+%              came off a hosted runner.
 %
 % THE GATE. publish refuses to promote unless report.pass is true, whatever
-% 'Promote' says: the option asks, the report decides. It will still write the
-% staging tree with 'Promote', false, which is how a failed release is inspected:
-% the numbers are all there, they are simply not where a reader can download them.
+% 'Promote' says. It still writes the staging tree, which is how a refused release
+% is inspected.
 %
-% WHAT IT WILL WRITE
+% WHAT IT WRITES, under current/ and frozen into vintages/YYYYQq/:
 %
-% current/  - the release a reader downloads, overwritten each quarter:
-%   trend_inflation.csv        tidy: date, model, measure, value with
-%                              measure in {mean, p05, p16, p84, p95, mcse}, one
-%                              block each for ucsv_sw07, ar_trend_bound and
-%                              biuc_lrexp
-%   output_gap.csv             same shape, for uc_2m and ucur_break2
-%   trend_growth.csv           same shape, for uc_2m alone - the same draws the gap
-%                              comes from, annualized
-%   trend_inflation_wide.csv   date down the first column and one model column
-%                              beside it, ragged where the models start at
-%                              different dates
-%   diagnostics.csv            inefficiency factor, MCSE and Geweke Z per parameter
-%   trend_cycle_estimates.xlsx a workbook holding the same three series
-%   metadata.json              vintage, run time UTC, git SHA, per-series URL and
-%                              fetch time and SHA-256, seed and settings per model
-%                              including compute_ml, MATLAB and toolbox versions,
-%                              elapsed time per model
+%   trend_inflation.csv        tidy: date, model, measure, value, with measure in
+%   output_gap.csv             {mean, p05, p16, p84, p95, mcse}
+%   trend_growth.csv
+%   trend_inflation_wide.csv   date, then one model to a column, ragged at the head
+%   diagnostics.csv            inefficiency factor and MCSE per parameter and date,
+%                              with Geweke Z on the scalar parameters and selected dates
+%   guardrails.csv             the check table, written pass or fail
+%   trend_cycle_estimates.xlsx the three series in one workbook
+%   metadata.json              vintage, run time, git SHA, per-series URL, fetch
+%                              time and SHA-256, seed and settings per model
 %
-% vintages/YYYYQq/ - a frozen copy of the above, written once and never touched
-%                    again. This is the real-time archive; it is the only reason a
-%                    revision can be measured at all.
+% revisions/YYYYQq.csv is written once and never rewritten, and not at all for the
+% first release. figures/ holds a PNG and a PDF per series, committed on purpose.
 %
-% revisions/YYYYQq.csv - the table revisions.m computed, written once per release
-%                    and never rewritten: the decomposition of a past quarter's
-%                    revision does not change when a later quarter is published.
-%                    Not written at all for the first release, which has no
-%                    predecessor to be revised against and would otherwise get a
-%                    file of zeros.
+% Workbook columns are ragged because models start at different dates, and every
+% offset is derived from the series' own dates. The CSVs are what is published.
 %
-% figures/current/ and figures/vintages/YYYYQq/ - PNG and PDF straight out of
-%   exportgraphics. Figures and PDFs are committed on purpose: published figures are
-%   part of this repository's product, and joshuachan.org hot-links them.
-%
-% THE WORKBOOK. trend_cycle_estimates.xlsx is for readers who want one file they
-% can open rather than three CSVs: a title in A1 naming the series and the vintage,
-% one header row, quarter-start dates down column A, and one model to a column
-% beside them. The columns are ragged because the models start at different dates,
-% and the offsets are DERIVED from each model's configured sample start, never
-% typed. A typed offset is how a column silently shifts by one quarter.
-%
-% The CSVs are what is published. The workbook is derived from them and is a
-% convenience, so anything that needs to be exact should read the CSVs.
-%
-% ONE JSON, ONE SOURCE OF TRUTH. metadata.json is what the website reads to write
-% "Estimates through YYYYQq - last updated - next update", what freshness.yml
-% compares against to decide whether a release is late, and what a reader needs to
-% reproduce the run. It is written from the results struct, not assembled by hand.
-%
-% Vintage tagging and the GitHub release are outside this function, in
-% tools/cut_release.ps1, because they are git operations rather than MATLAB ones.
+% NAME CLASH, DELIBERATE. MATLAB ships a built-in publish. setup.m leaves
+% estimates/ off the path; run_release adds it for one run.
 
-function files = publish(results, report, revs, manifest, stagedir, varargin)  %#ok<STOUT,INUSD>
+function files = publish(results, report, revs, manifest, stagedir, opts)
 
-error('uc:estimates:publish:notImplemented', ...
-    ['publish is not implemented yet (phase 5). The output schemas it will write ' ...
-     'are described in the header and in estimates/current/README.md.']);
+arguments
+    results (1,:) struct
+    report (1,1) struct
+    revs
+    manifest
+    stagedir {mustBeTextScalar}
+    opts.Vintage {mustBeTextScalar} = ''
+    opts.Promote (1,1) logical = false
+    opts.Mode {mustBeTextScalar} = 'local'
+end
+
+if isempty(opts.Vintage)
+    error('uc:estimates:publish:noVintage', ...
+        'Vintage is required. It names the frozen folder and is stamped into metadata.json.');
+end
+vintage = char(opts.Vintage);
+stagedir = char(stagedir);
+
+cur = fullfile(stagedir, 'current');
+vin = fullfile(stagedir, 'vintages', vintage);
+fig = fullfile(stagedir, 'figures', 'current');
+figv = fullfile(stagedir, 'figures', 'vintages', vintage);
+for d = {cur, vin, fig, figv, fullfile(stagedir, 'revisions')}
+    if ~isfolder(d{1}), mkdir(d{1}); end
+end
+
+files = {};
+
+% ---- the three published series, tidy -------------------------------------
+for s = {'trend_inflation', 'output_gap', 'trend_growth'}
+    t = tidy_series(results, s{1});
+    if isempty(t), continue, end
+    files{end+1} = write_csv(t, fullfile(cur, [s{1} '.csv'])); %#ok<AGROW>
+end
+
+% ---- one wide file, for the series with three models ----------------------
+w = wide_series(results, 'trend_inflation');
+if ~isempty(w)
+    files{end+1} = write_csv(w, fullfile(cur, 'trend_inflation_wide.csv'));
+end
+
+% ---- diagnostics and the guardrail report --------------------------------
+diagnostics = vertcat(results.diagnostics);
+files{end+1} = write_csv(diagnostics, fullfile(cur, 'diagnostics.csv'));
+files{end+1} = write_csv(report.checks, fullfile(cur, 'guardrails.csv'));
+
+% ---- the workbook ---------------------------------------------------------
+files{end+1} = write_workbook(results, vintage, fullfile(cur, 'trend_cycle_estimates.xlsx'));
+
+% ---- metadata -------------------------------------------------------------
+files{end+1} = write_metadata(results, report, manifest, vintage, opts.Mode, ...
+                              fullfile(cur, 'metadata.json'));
+
+% ---- figures --------------------------------------------------------------
+files = [files, draw_figures(results, vintage, fig)];
+
+% ---- the revision table, from the second release onward -------------------
+if ~isempty(revs) && height(revs) > 0
+    files{end+1} = write_csv(revs, fullfile(stagedir, 'revisions', [vintage '.csv']));
+end
+
+% ---- freeze ---------------------------------------------------------------
+copyfile(fullfile(cur, '*'), vin);
+copyfile(fullfile(fig, '*'), figv);
+files{end+1} = vin;
+files{end+1} = figv;
+
+% ---- the gate -------------------------------------------------------------
+if opts.Promote
+    if ~report.pass
+        error('uc:estimates:publish:refused', ...
+            ['refusing to promote %s: %d guardrail check(s) failed. The staging ' ...
+             'tree is at %s and holds the numbers and the report; nothing was ' ...
+             'copied into estimates/.'], vintage, report.nfail, stagedir);
+    end
+    root = fileparts(fileparts(mfilename('fullpath')));
+    promote(stagedir, fullfile(root, 'estimates'), vintage);
+    files{end+1} = fullfile(root, 'estimates');
+end
+
+files = files(:);
+end
+
+
+% ---------------------------------------------------------------------------
+function t = tidy_series(results, name)
+% date, model, measure, value - one block per model that produces this series.
+blocks = {};
+for k = 1:numel(results)
+    r = results(k);
+    if ~isfield(r.series, name), continue, end
+    s = r.series.(name);
+    m = s.summary;
+    mc = mcse_for(r.diagnostics, name, s.dates);
+    nd = numel(s.dates);
+    measures = {'mean', 'p05', 'p16', 'p84', 'p95', 'mcse'};
+    vals = [m.mean, m.p05, m.p16, m.p84, m.p95, mc];
+    for j = 1:numel(measures)
+        blocks{end+1} = table(s.dates, repmat(string(r.model), nd, 1), ...
+            repmat(string(measures{j}), nd, 1), vals(:, j), ...
+            'VariableNames', {'date', 'model', 'measure', 'value'}); %#ok<AGROW>
+    end
+end
+if isempty(blocks), t = table(); return, end
+t = sortrows(vertcat(blocks{:}), {'model', 'measure', 'date'});
+end
+
+
+function w = wide_series(results, name)
+% date down the first column, one model beside it, ragged at the head.
+cols = {}; names = {}; alldates = NaT(0, 1);
+for k = 1:numel(results)
+    if ~isfield(results(k).series, name), continue, end
+    s = results(k).series.(name);
+    cols{end+1} = s; names{end+1} = results(k).model; %#ok<AGROW>
+    alldates = union(alldates, s.dates);
+end
+if isempty(cols), w = table(); return, end
+alldates = sort(alldates(:));
+w = table(alldates, 'VariableNames', {'date'});
+for k = 1:numel(cols)
+    v = nan(numel(alldates), 1);
+    [tf, loc] = ismember(cols{k}.dates, alldates);
+    v(loc(tf)) = cols{k}.summary.mean(tf);
+    w.(names{k}) = v;
+end
+end
+
+
+function mc = mcse_for(diagnostics, name, dates)
+% The MCSE column for one series, matched date by date rather than by position.
+mc = nan(numel(dates), 1);
+if isempty(diagnostics), return, end
+rows = diagnostics(diagnostics.series == string(name), :);
+if isempty(rows), return, end
+[tf, loc] = ismember(dates, rows.date);
+mc(tf) = rows.mcse(loc(tf));
+end
+
+
+function p = write_csv(t, p)
+if isempty(t) || height(t) == 0, return, end
+writetable(t, p);
+end
+
+
+function p = write_workbook(results, vintage, p)
+% One sheet per series, a title row, then dates and one model to a column.
+if isfile(p), delete(p); end
+for s = {'trend_inflation', 'output_gap', 'trend_growth'}
+    w = wide_series(results, s{1});
+    if isempty(w), continue, end
+    title = sprintf('%s, posterior mean, vintage %s', strrep(s{1}, '_', ' '), vintage);
+    writecell({title}, p, 'Sheet', s{1}, 'Range', 'A1');
+    writetable(w, p, 'Sheet', s{1}, 'Range', 'A2');
+end
+end
+
+
+function p = write_metadata(results, report, manifest, vintage, mode, p)
+meta = struct();
+meta.vintage = vintage;
+meta.generated_utc = char(datetime('now', 'TimeZone', 'UTC', ...
+    'Format', 'yyyy-MM-dd''T''HH:mm:ss''Z'''));
+meta.git_sha = git_sha();
+meta.mode = mode;
+if strcmp(mode, 'cloud-backup')
+    meta.mode_note = ['produced on a hosted runner, not the release machine; ' ...
+                      'not byte-identical to a local run'];
+end
+meta.guardrails = struct('pass', report.pass, 'nfail', report.nfail, ...
+                         'seasonal', report.seasonal);
+
+m = struct([]);
+for k = 1:numel(results)
+    r = results(k);
+    e = struct();
+    e.model = r.model;
+    e.seed = r.seed;
+    e.sample_start = r.sample_start;
+    e.sample_end = r.sample_end;
+    e.ndraws = r.ndraws;
+    e.elapsed_seconds = r.elapsed;
+    e.series = fieldnames(r.series)';
+    e.settings = rmfield(r.settings, intersect({'cites'}, fieldnames(r.settings)));
+    e.cites = r.settings.cites;
+    e.accept = r.accept;
+    e.versions = r.versions;
+    m = [m, e]; %#ok<AGROW>
+end
+meta.models = m;
+meta.sources = manifest;
+
+fid = fopen(p, 'w');
+fprintf(fid, '%s\n', jsonencode(meta, 'PrettyPrint', true));
+fclose(fid);
+end
+
+
+function out = draw_figures(results, vintage, dir)
+% One figure per series: the posterior mean and the 90 per cent band per model.
+out = {};
+for s = {'trend_inflation', 'output_gap', 'trend_growth'}
+    name = s{1};
+    have = arrayfun(@(r) isfield(r.series, name), results);
+    if ~any(have), continue, end
+    f = figure('Visible', 'off', 'Position', [100 100 900 450]);
+    ax = axes(f); hold(ax, 'on'); %#ok<LAXES>
+    for k = find(have)
+        ser = results(k).series.(name);
+        m = ser.summary;
+        fill(ax, [m.date; flipud(m.date)], [m.p05; flipud(m.p95)], [0.6 0.7 0.85], ...
+            'FaceAlpha', 0.25, 'EdgeColor', 'none', 'HandleVisibility', 'off');
+        plot(ax, m.date, m.mean, 'LineWidth', 1.2, 'DisplayName', ...
+            strrep(results(k).model, '_', '\_'));
+    end
+    yline(ax, 0, ':', 'HandleVisibility', 'off');
+    title(ax, sprintf('%s, vintage %s', strrep(name, '_', ' '), vintage));
+    ylabel(ax, 'per cent, annualized'); legend(ax, 'Location', 'best'); box(ax, 'on');
+    for ext = {'png', 'pdf'}
+        p = fullfile(dir, [name '.' ext{1}]);
+        exportgraphics(ax, p, 'Resolution', 150);
+        out{end+1} = p; %#ok<AGROW>
+    end
+    close(f);
+end
+end
+
+
+function promote(stagedir, dest, vintage)
+% Copy the staging tree into the tracked tree. current/ and figures/current/ are
+% overwritten each quarter; the frozen vintage is written once.
+copyfile(fullfile(stagedir, 'current'), fullfile(dest, 'current'));
+copyfile(fullfile(stagedir, 'figures', 'current'), fullfile(dest, 'figures', 'current'));
+
+v = fullfile(dest, 'vintages', vintage);
+if isfolder(v)
+    error('uc:estimates:publish:vintageExists', ...
+        ['%s already exists. A frozen vintage is written once and never ' ...
+         'touched again; re-running a published quarter would rewrite the ' ...
+         'archive a revision is measured against.'], v);
+end
+copyfile(fullfile(stagedir, 'vintages', vintage), v);
+copyfile(fullfile(stagedir, 'figures', 'vintages', vintage), ...
+         fullfile(dest, 'figures', 'vintages', vintage));
+
+rf = fullfile(stagedir, 'revisions', [vintage '.csv']);
+if isfile(rf)
+    if ~isfolder(fullfile(dest, 'revisions')), mkdir(fullfile(dest, 'revisions')); end
+    copyfile(rf, fullfile(dest, 'revisions', [vintage '.csv']));
+end
+end
+
+
+function sha = git_sha()
+% Run git against the repository, never against whatever directory the caller
+% happens to be sitting in.
+root = fileparts(fileparts(mfilename('fullpath')));
+[st, out] = system(sprintf('git -C "%s" rev-parse HEAD', root));
+if st == 0
+    sha = strtrim(out);
+else
+    sha = 'unknown';
+end
+end

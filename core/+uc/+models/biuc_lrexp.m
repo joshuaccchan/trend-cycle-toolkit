@@ -10,13 +10,12 @@ function out = biuc_lrexp(infl, expect, opts)
 % long-run expectations are modelled jointly, so the expectations series informs
 % the trend directly.
 %
-% infl    annualized percent inflation, from uc.data.annualized_log_diff
-% expect  long-run CPI inflation expectations, from uc.data.build_ptrcpi
+% infl    annualized percent PCE inflation, from uc.data.annualized_log_diff
+% expect  long-run PCE expectations, from uc.data.build_ptr
 %
-% Both must be the same length and on the same quarterly axis, and the first
-% observation of each is a presample value, as in the published driver, so the
-% estimation sample is one quarter shorter than the input. PTRCPI begins in 1960Q1,
-% which is where this model's sample starts; the other four run from 1947.
+% Both must be the same length and on the same quarterly axis. The first
+% observation of each is a presample value, so the estimation sample is one
+% quarter shorter than the input.
 %
 % Requires the Optimization Toolbox, for the fminunc in the psi block. It is the
 % only one of the five models that does.
@@ -26,30 +25,12 @@ function out = biuc_lrexp(infl, expect, opts)
 %   'Burnin'  sweeps discarded                 (default  1000)
 %   'Thin'    keep every Thin-th retained draw (default 10)
 %   'Seed'    rng seed                         (default 1)
-%   'Q'       MA order of the inflation error  (default 1, the published value)
+%   'Q'       MA order of the inflation error  (default 1)
 %
-% The published driver sets nsim = 30000 with burnin = 1000 and loops
-% 1:nsim+burnin, so its nsim is the retained count and NSim here is 31000.
+% From trend_IE_code.zip/M1.m.
 %
-% The body is M1.m unchanged except that data and settings arrive as arguments, the
-% clock seed becomes rng(opts.Seed,'threefry'), there is no plotting or timing, and
-% the helper calls are repointed:
-%
-%   SURform     -> uc.util.surform
-%   buildHpsi   -> uc.util.build_hpsi
-%   llike_MAq   -> uc.util.llike_maq
-%   SVRW        -> uc.sv.ksc_rw_h0_Vh
-%   sample_b, sample_psi, sample_sig2  -> local functions at the bottom of this file
-%
-% Those three stay local because sample_sig2 and sample_psi are names unrelated
-% packages use for different computations of the same arity.
-%
-% Verified 2026-09-10 against the published script on the data trend_IE_code.zip
-% ships (cck1_data.xlsx, B54:B278 and C54:C278), 300 sweeps under seed 4: bitwise
-% identical draws.
-%
-% The published body uses pi as a variable name, shadowing MATLAB's built-in pi for
-% the rest of the scope. Nothing here reads the constant.
+% The body uses pi as a variable name, which shadows MATLAB's built-in pi for the
+% rest of the scope. Nothing here reads the constant.
 
 arguments
     infl (:,1) double
@@ -278,6 +259,11 @@ out.d        = store_d(keep, :);
 out.lamv     = store_lamv(keep, :);
 out.lamn     = store_lamn(keep, :);
 out.theta    = store_theta(keep, :);
+out.accept   = struct('b', countb / (nsim + burnin), ...
+                      'psi', countpsi / (nsim + burnin), ...
+                      'sigb2', countsigb2 / (nsim + burnin), ...
+                      'rhod1', countrhod(1) / (nsim + burnin), ...
+                      'rhod2', countrhod(2) / (nsim + burnin));   % [uc]
 out.settings = struct('nsim', opts.NSim, 'burnin', burnin, 'thin', opts.Thin, ...
                       'seed', opts.Seed, 'q', q, 'T', T);
 out.ndraws   = numel(keep);

@@ -7,9 +7,10 @@
 % before the auxiliary-mixture sampler takes over, so a run does not spend its
 % burn-in walking in from an arbitrary starting point.
 %
-% Lifted from SV_RW_gaussian_approx.m in joshuaccchan/bayesian-macroeconometrics,
-% chapter10, renamed and otherwise unchanged. It is a deterministic optimization
-% and draws nothing, so moving the call does not shift the random stream.
+% A deterministic optimization: it draws nothing, so moving the call does not shift
+% the random stream.
+%
+% From chapter10/SV_RW_gaussian_approx.m in joshuaccchan/bayesian-macroeconometrics.
 
 function h_hat = rw_gaussian_approx(s2,h0,sigh2)
 % SV_RW_gaussian_approx.m

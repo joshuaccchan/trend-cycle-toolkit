@@ -3,10 +3,8 @@
 Everything that turns fetched data into a published vintage. `run_release.m` at the repository
 root is the driver; these seven functions are the stages it calls.
 
-Almost none of it is implemented. Six of the seven are documented stubs whose bodies error and
-whose headers say what they will do and which phase builds them. `resolve_break_dates.m` is
-working code. `setup.m` keeps `estimates/` off the path — `run_release` adds it for the run — so
-calling one of these by hand needs `addpath estimates` first.
+`setup.m` keeps `estimates/` off the path — `run_release` adds it for the run — so calling one
+of these by hand needs `addpath estimates` first.
 
 ## The pipeline
 
@@ -49,6 +47,40 @@ release that was refused.
 driver each setting comes from named beside it. Sample starts are settled: every model runs on
 all available data, so each start is the first quarter its inputs support.
 
-No model has a measured runtime, and a model without one does not go on the schedule. Phase 1
-measures all five as this repository implements them, at these settings and so with the marginal
-likelihood off, and records the figures in `RELEASE_CALENDAR.md`.
+A model without a measured runtime does not go on the schedule. Measured 2026-09-11 on the
+release machine, at the settings above and so with the marginal likelihood off:
+
+| model | minutes |
+|---|---|
+| `ucsv_sw07` | 0.4 |
+| `ucur_break2` | 0.8 |
+| `uc_2m` | 0.9 |
+| `ar_trend_bound` | 1.1 |
+| `biuc_lrexp` | 3.4 |
+
+Six and a half minutes in series, four with two workers. `model_lists` in `run_release.m` is what
+actually opens the schedule, and it still lists none of them — that is a decision to take once
+G7 is settled, not a consequence of the timing.
+
+## Chain Lengths
+
+Three models run longer chains than their published drivers, each because the effective sample at
+the published length falls below the 100 G7 requires: `ucsv_sw07` measured 61, `biuc_lrexp` 40 and
+`uc_2m` 40, on data running eleven years past the samples those papers used. Measured 2026-09-12
+at the settings in `preset.m`:
+
+| model | nsim / burnin | published | stored | minutes |
+|---|---|---|---|---|
+| `ucsv_sw07` | 110,000 / 10,000 | 51,000 / 1,000 | 10,000 | 0.7 |
+| `ar_trend_bound` | 35,000 / 5,000 | as published | 3,000 | 0.9 |
+| `biuc_lrexp` | 400,000 / 40,000 | 31,000 / 1,000 | 36,000 | ~37 |
+| `uc_2m` | 430,000 / 30,000 | 110,000 / 10,000 | 40,000 | 3.3 |
+| `ucur_break2` | 110,000 / 10,000 | as published | 10,000 | 0.8 |
+
+G7 gates on effective sample size alone. Geweke Z is computed and written to `diagnostics.csv`,
+and it is not a release gate: most of what it scores are points on one state path, which move
+together, so a share of them carries much less information than its face value suggests. It is
+also sensitive to the truncation lag used for the long-run variance — `uc.diag.geweke`'s own
+`'auto'` rule picks 9 lags on a 40,000-draw chain whose integration time is nearly 300, which
+inflates every Z on a persistent path at once. `run_estimates` passes it the same lag `ineff` and
+`mcse` use, capped against the segment being tested.

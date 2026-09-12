@@ -4,27 +4,27 @@ function tbl = fetch_frbus_ptr(opts)
 %   tbl = uc.data.fetch_frbus_ptr()
 %   tbl = uc.data.fetch_frbus_ptr('File', 'data_only_package.zip')
 %
-% Returns a table with date (quarter start) and value (percent per year). It is the
-% early half of the PTRCPI splice in uc.data.build_ptrcpi, and through PTRCPI it is
-% what biuc_lrexp reads before 2006Q1.
-%
-% The Board publishes the FRB/US data package as one zip:
+% Returns a table of date (quarter start) and value (percent per year), read out of
+% the Board's FRB/US package:
 %
 %   https://www.federalreserve.gov/econres/files/data_only_package.zip
 %
-% THE TRAP. It contains two data files and only one of them is history:
+% It is the whole of the long-run expectations series biuc_lrexp reads, backfilled
+% at the head by uc.data.build_ptr, and it sets that model's sample end: when the
+% Board has not refreshed the package, biuc_lrexp ends a quarter behind the others.
+%
+% THE TRAP. The package holds two data files and only one is history:
 %
 %   HISTDATA.TXT   historical data. Last OBS 2026Q1.
 %   LONGBASE.TXT   the same variables with a projection appended. Last OBS 2176Q2.
 %
 % Reading LONGBASE would hand the model a hundred and fifty years of forecast as
 % though it were observed, and nothing downstream would object: the series is
-% smooth, plausibly scaled, and simply keeps going. This function reads HISTDATA
-% only and asserts that its last observation is not in the future.
+% smooth, plausibly scaled, and simply keeps going. This reads HISTDATA only and
+% asserts its last observation is not in the future.
 %
 % PTR sits in column 183 of 366 and that layout is reorganized from time to time,
-% so it is located BY NAME and its absence is an error. G2 in
-% estimates/guardrails.m treats a failure here as the canary for a layout change.
+% so it is located BY NAME and its absence is an error.
 
 arguments
     opts.File (1,:) char = ''

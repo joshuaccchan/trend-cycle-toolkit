@@ -6,12 +6,11 @@ every quarter from public data.
 
 ## Status
 
-The data layer and all five models are written. Each model reproduces the published driver it
-was taken from, draw for draw: four against the data that driver's own package ships, and
-`ucsv_sw07` against the book's `chapter10/UCSV.m` on CPI inflation fetched by `uc.data`. The
-seed and chain length of each check are in the model's file header. Six of the seven functions
-under `estimates/` are documented stubs that error when called, and phase 5 builds them;
-`resolve_break_dates.m` is working code. No estimate has been produced yet.
+The data layer, all five models and the release pipeline are written. Each model reproduces the
+published driver it was taken from, draw for draw.
+
+No estimate has been published yet. A release is promoted only when every check in
+`estimates/guardrails.m` passes.
 
 ## The Three Series
 
@@ -22,7 +21,8 @@ under `estimates/` are documented stubs that error when called, and phase 5 buil
 | Trend output growth | `estimates/current/trend_growth.csv` | `uc_2m`, from the same draws as its gap |
 
 Each release also writes `diagnostics.csv`, holding inefficiency factors, Monte Carlo standard
-errors and Geweke statistics for every published parameter; `trend_cycle_estimates.xlsx`, holding
+errors for every published parameter and date, with Geweke statistics on the scalar parameters
+and selected dates; `trend_cycle_estimates.xlsx`, holding
 the same three series in one workbook; and `metadata.json`, recording the vintage, the git SHA,
 the seed and settings of each model, and the URL, fetch time and SHA-256 of every input. The
 revision tolerance is `max(0.20pp, 3 x MCSE)`, which separates a revision from the sampler's own
@@ -35,9 +35,9 @@ fixed vintage. The first release creates those directories.
 
 | Model | Series | Method source | Data | Sample |
 |---|---|---|---|---|
-| `uc.models.ucsv_sw07` | Trend inflation | Stock and Watson (2007, JMCB 39(s1): 3–33) | `CPIAUCSL` | 1947Q2– |
-| `uc.models.ar_trend_bound` | Trend inflation | Chan, Koop and Potter (2013, JBES 31(1): 94–106) | `CPIAUCSL` | 1947Q2– |
-| `uc.models.biuc_lrexp` | Trend inflation | Chan, Clark and Koop (2018, JMCB 50(1): 5–53) | `CPIAUCSL` + `PTRCPI` | 1960Q1– |
+| `uc.models.ucsv_sw07` | Trend inflation | Stock and Watson (2007, JMCB 39(s1): 3–33) | `DPCERD3Q086SBEA` | 1947Q2– |
+| `uc.models.ar_trend_bound` | Trend inflation | Chan, Koop and Potter (2013, JBES 31(1): 94–106) | `DPCERD3Q086SBEA` | 1947Q2– |
+| `uc.models.biuc_lrexp` | Trend inflation | Chan, Clark and Koop (2018, JMCB 50(1): 5–53) | `DPCERD3Q086SBEA` + `PTR` | 1960Q2– |
 | `uc.models.uc_2m` | Output gap **and** trend growth | Grant and Chan (2017, JEDC 75: 114–121) | `GDPC1` | 1947Q1– |
 | `uc.models.ucur_break2` | Output gap | Grant and Chan (2017, JMCB 49(2-3): 525–552) | `GDPC1` | 1947Q1– |
 
@@ -47,10 +47,17 @@ The four Chan papers have replication packages at
 `chapter10/UCSV.m` in the book repository,
 [bayesian-macroeconometrics](https://github.com/joshuaccchan/bayesian-macroeconometrics).
 
+**Trend inflation here is PCE inflation.** `biuc_lrexp` pairs inflation with FRB/US `PTR`, which
+is published in PCE terms, and that is the combination reaching back to 1960 that Chan, Clark and
+Koop report and that their `M1.m` reads. The other two models follow PCE so the three columns
+share one price index.
+
 Every model runs on all available data. Each sample begins at the first quarter its inputs
-support, so a release extends the sample at the end. `biuc_lrexp` begins in 1960Q1, where
-`PTRCPI` begins: FRB/US `PTR` starts in 1968Q1, and `uc.data.build_ptrcpi` backfills 1960Q1
-through 1967Q4 flat at its first value.
+support, so a release extends the sample at the end. `biuc_lrexp` begins in 1960Q2: `PTR` starts
+in 1968Q1, `uc.data.build_ptr` holds it flat over the 32 quarters back to 1960Q1 as the published
+package does, and the first quarter is the presample observation the model takes. It also ends
+where `PTR` ends, so when the Board has not refreshed the FRB/US package that column runs a
+quarter behind the others.
 
 `uc_2m` puts a second-order Markov process on the trend, the trend the Hodrick-Prescott filter
 implies, and lets the cycle be serially correlated, which the filter does not allow; its implied
@@ -60,40 +67,47 @@ errors and places two breaks in trend growth, at 1973Q1 and 2007Q1, estimating a
 of the three regimes, so its implied trend growth is a step function. The two models run on the
 same series, so the distance between their gap estimates is what the specification contributes.
 
-These are re-implementations, and each differs from the driver it was taken from in recorded
-ways: data arrives as an argument, the seed is set from one, and the plotting and the
-marginal-likelihood step are out. Every model's file header lists its own divergences, and each
-changed line is marked in the body.
+These are re-implementations. Each takes its data and settings as arguments where the published
+driver hard-coded them, seeds from `rng(seed,'threefry')` where the driver seeded from the clock,
+and drops the plotting and the marginal-likelihood step. Nothing in the samplers themselves is
+touched, and each file names the package it came from.
+
+Three models run longer chains than their published drivers, because on current data the
+published lengths leave too small an effective sample. `estimates/preset.m` carries the lengths
+and the published values they depart from; `estimates/README.md` carries the measurements.
 
 ## How the Estimates Update
 
 Estimation runs on one machine, on the 1st of March, June, September and December, driven by
-`tools/run_update.ps1` (phase 5), which commits and pushes what it wrote. GitHub Actions runs a
-weekly freshness check and the unit suite. `RELEASE_CALENDAR.md` lists the dates, the inputs each
-release requires, and the revision policy.
+`tools/run_update.ps1`, which commits, tags and pushes what the run promoted. A release is
+promoted only when every check in `estimates/guardrails.m` passes; a refused release leaves the
+tracked tree untouched and its report under `build/`. GitHub Actions runs a weekly freshness
+check and the unit suite. `RELEASE_CALENDAR.md` lists the dates, the inputs each release
+requires, and the revision policy.
 
 ## The Code
 
 ```
 core/+uc/          the library
-  +data            fetchers, the PTRCPI splice, alignment and transforms, the
+  +data            fetchers, the PTR backfill, alignment and transforms, the
                    incomplete-quarter guard, the vintage stamp
   +models          the five models
   +sv              ksc_rw_h0, ksc_rw_h0_Vh, rw_gaussian_approx
+  +diag            inefficiency factors, MCSE, Geweke Z
   +util            surform, build_hpsi, llike_maq
-estimates/         the release pipeline — see estimates/README.md   (phase 5)
-run_release.m      the driver                                       (phase 5)
+estimates/         the release pipeline — see estimates/README.md
+run_release.m      the driver
+tools/             run_update.ps1, the scheduled entry point
 setup.m            puts the repository root and core/ on the path
 ```
 
-Each model is checked once, as it is written, against the driver it was taken from. Download that
-package from [joshuachan.org/code.html](https://joshuachan.org/code.html) into a scratch
-directory outside the repository, or take `chapter10/UCSV.m` from
+Each model is checked against the driver it was taken from. Download that package from
+[joshuachan.org/code.html](https://joshuachan.org/code.html) into a scratch directory outside the
+repository, or take `chapter10/UCSV.m` from
 [bayesian-macroeconometrics](https://github.com/joshuaccchan/bayesian-macroeconometrics) for
-`ucsv_sw07`, run it on the data the check uses, run the implementation here on the same data
-under the same seed, and require the same draws. The model's file header records what changed in
-the lift and which draws matched. The check confirms the implementation against the published
-driver before any number is published.
+`ucsv_sw07`, run it on the data that package ships, run the implementation here on the same data
+under the same seed, and require the same draws. It needs the network, so it is run by hand
+rather than in CI.
 
 ## Requirements
 

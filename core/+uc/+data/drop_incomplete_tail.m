@@ -7,8 +7,7 @@ function [tbl, dropped] = drop_incomplete_tail(tbl)
 % Takes a table from uc.data.fetch_fred and returns it without any trailing rows
 % whose value is missing. dropped is the number removed, 0 or more.
 %
-% FRED publishes the quarter in progress as a PRESENT row with an EMPTY value.
-% Verified 2026-09-09: the quarterly CPIAUCSL response ends
+% FRED publishes the quarter in progress as a PRESENT row with an EMPTY value:
 %
 %   2026-04-01,332.985
 %   2026-07-01,
@@ -16,8 +15,8 @@ function [tbl, dropped] = drop_incomplete_tail(tbl)
 % Read without care that becomes NaN, and one NaN in a price index propagates
 % through every log difference after it and into the whole state path. The
 % published drivers guard it by hard-coding a spreadsheet range, which is correct
-% for one vintage and wrong for the next. Series differ: CPIAUCSL had an empty
-% running quarter on 2026-09-09 and GDPC1 did not.
+% for one vintage and wrong for the next. Which series carry such a row varies from
+% quarter to quarter, so a release cannot assume they all need the same trim.
 %
 % Only TRAILING missing values are removed. uc.data.fetch_fred already errors on a
 % gap inside the sample, and an interior NaN survives here to be caught downstream.

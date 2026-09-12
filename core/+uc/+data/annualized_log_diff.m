@@ -1,7 +1,7 @@
 function tbl = annualized_log_diff(tbl)
 % uc.data.annualized_log_diff - a price index to annualized percent inflation.
 %
-%   infl = uc.data.annualized_log_diff(cpi)
+%   infl = uc.data.annualized_log_diff(pce)
 %
 % Takes a table of quarterly index levels from uc.data.fetch_fred and returns the
 % same table one row shorter, with
@@ -9,7 +9,7 @@ function tbl = annualized_log_diff(tbl)
 %   value_t = 400 * log( level_t / level_{t-1} )
 %
 % The first row has no predecessor and is dropped, which is why the three trend
-% inflation models start at 1947Q2 while CPIAUCSL begins at 1947Q1.
+% inflation models start at 1947Q2 while DPCERD3Q086SBEA begins at 1947Q1.
 %
 % The factor is 4 for annualization and 100 for percent. Annualized percentage
 % points are the units the published models are written against - ar_trend_bound
@@ -17,10 +17,10 @@ function tbl = annualized_log_diff(tbl)
 % whole sample outside that support and the sampler would reject forever without
 % saying why.
 %
-% Verified 2026-09-09: applied to the quarterly average of CPIAUCSL as FRED
-% aggregates it, this reproduces the USCPI_Q.csv shipped inside ARtrendbound.zip to
-% 2e-10 over the quarters BLS has not since revised. The same comparison against
-% CPIAUCNS, the unadjusted index, is out by 3.5pp, which rules that series out.
+% Verified against both published packages: applied to DPCERD3Q086SBEA it
+% reproduces cck1_data.xlsx's PCEINFL column from 1947Q2 at correlation 0.99901,
+% and applied to the quarterly average of CPIAUCSL it reproduces ARtrendbound.zip's
+% USCPI_Q.csv to 2e-10 over the quarters BLS has not since revised.
 %
 % This runs on the way into a model, so what a release archives stays levels.
 

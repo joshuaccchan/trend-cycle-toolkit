@@ -6,8 +6,7 @@ function manifest = vintage_stamp(src, stagedir, vintage)
 % src is the struct of fetched series tables. Each is written to
 % stagedir/sources/<name>.csv and hashed, and manifest comes back as a struct array
 % with one entry per series: name, file, url, fetched, rows, first, last and sha256.
-% estimates/publish.m copies both into the vintage and folds the manifest into
-% metadata.json.
+% publish copies both into the vintage and folds the manifest into metadata.json.
 %
 % There is no vintage service behind these series, so a later run cannot ask what
 % the data looked like at an earlier release. Without the archived input a release
@@ -15,8 +14,7 @@ function manifest = vintage_stamp(src, stagedir, vintage)
 % grew, or the sampler wandered.
 %
 % The hash is over the CSV this function writes, so it is a hash of what is
-% archived. Hashing the raw download instead would tie the record to transport
-% details such as line endings.
+% archived. Hashing the raw download would tie the record to transport details.
 
 arguments
     src (1,1) struct
@@ -58,7 +56,16 @@ for k = 1:numel(names)
         'sha256',  sha256_of(file));  %#ok<AGROW>
 end
 
-writetable(struct2table(manifest), fullfile(outdir, 'manifest.csv'));
+% struct2table reads a scalar struct as one column per field, and an absent url is
+% a 0-row char where the others have 1, so a single-series manifest needs AsArray.
+% The option cannot be passed as false for an array, so the two cases are separate
+% calls rather than one with a computed flag.
+if isscalar(manifest)
+    tbl = struct2table(manifest, 'AsArray', true);
+else
+    tbl = struct2table(manifest);
+end
+writetable(tbl, fullfile(outdir, 'manifest.csv'));
 
 fid = fopen(fullfile(outdir, 'VINTAGE'), 'w');
 fprintf(fid, '%s\n', vintage);

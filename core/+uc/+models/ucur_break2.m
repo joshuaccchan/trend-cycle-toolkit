@@ -8,14 +8,13 @@ function out = ucur_break2(y, breaks, opts)
 % Trend-Cycle Decompositions of Output", Journal of Money, Credit and Banking,
 % 49(2-3), 525-552 - model 6 of the eight that package compares. The trend and
 % cycle innovations are correlated, and trend output growth takes a different
-% constant value in each of the three regimes the two breaks define, so its trend
+% constant value in each of the three regimes the breaks define, so its trend
 % growth is a step function where uc_2m's varies smoothly.
 %
 % y is 100*log of real output. breaks is a two-element vector of ROW INDICES into
 % y, in increasing order, which is what the sampler needs; resolve them from
-% calendar quarters with estimates/resolve_break_dates.m. The published driver
-% hard-codes t0 = 105 and t1 = 241, which are 1973Q1 and 2007Q1 only while the
-% sample starts at 1947Q1.
+% calendar quarters with estimates/resolve_break_dates.m. 105 and 241 are 1973Q1
+% and 2007Q1 only while the sample starts at 1947Q1.
 %
 % OPTIONS
 %   'NSim'    TOTAL sweeps, burn-in included   (default 110000)
@@ -23,19 +22,12 @@ function out = ucur_break2(y, breaks, opts)
 %   'Thin'    keep every Thin-th retained draw (default 10)
 %   'Seed'    rng seed                         (default 1)
 %
-% As in uc_2m, this package's own nsims is the RETAINED count and it loops
-% 1:nsims+burnin, so the published nsims = 100000 with burnin = 10000 is
-% NSim = 110000 here.
+% As in uc_2m, this package's own nsims is the RETAINED count.
 %
-% The body is UCUR_break2.m with the sampler untouched, changed only in that data
-% and settings arrive as arguments, the clock seed becomes
-% rng(opts.Seed,'threefry'), the marginal likelihood is out, and there is no
-% plotting, printing or timing. Verified 2026-09-09 against the published script on
-% the data output_gap_code.zip ships, breaks at 105 and 241, 600 sweeps under seed
-% 3: bitwise identical draws, and the gap matches y - tau exactly.
+% From output_gap_code.zip/UCUR_break2.m.
 %
-% The body assigns a variable named `uc` in the tau block, shadowing the uc package
-% for the rest of the scope. This model calls no helper.
+% The body assigns a variable named `uc`, which shadows the uc package for the
+% rest of the scope. This model calls no helper.
 
 arguments
     y (:,1) double
@@ -218,6 +210,7 @@ out.gap    = y(:)' - store_tau(keep, :);
 out.theta  = store_theta(keep, :);
 out.theta_names = {'mu1', 'mu2', 'mu3', 'phi1', 'phi2', 'sigc2', 'sigtau2', ...
                    'rho', 'tau0'};
+out.accept = struct('phi', countphi / (nsims + burnin));   % [uc]
 out.breaks = breaks;
 out.settings = struct('nsim', opts.NSim, 'burnin', burnin, 'thin', opts.Thin, ...
                       'seed', opts.Seed, 'T', T, 'breaks', breaks);

@@ -5,8 +5,7 @@
 % The objective the psi block of uc.models.biuc_lrexp maximizes before its
 % accept-reject step.
 %
-% Lifted from llike_MAq.m in trend_IE_code.zip, renamed, with its one helper call
-% repointed at uc.util.build_hpsi.
+% From llike_MAq.m in trend_IE_code.zip.
 
 function lden = llike_maq(psi,y,sig2)
 T = length(y);

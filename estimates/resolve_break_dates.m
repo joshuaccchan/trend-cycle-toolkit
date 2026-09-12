@@ -3,38 +3,20 @@ function idx = resolve_break_dates(break_dates, sample_dates)
 %
 %   idx = resolve_break_dates({'1973Q1','2007Q1'}, dates)
 %
-% break_dates is one 'YYYYQq' string or a list of them, as preset.m carries them;
-% sample_dates is the date axis of the sample actually being estimated, either a
-% datetime vector of quarters or a list of 'YYYYQq' strings. What comes back is one
-% row index per break date, into that axis.
+% break_dates is one 'YYYYQq' string or a list of them, as preset carries them;
+% dates is the axis of the sample being estimated, either a datetime vector of
+% quarters or a list of 'YYYYQq' strings. Returns one row index per break date.
 %
-% WHY THIS EXISTS. The published driver behind ucur_break2 builds its three regime
-% dummies from the row indices t0 = 105 and t1 = 241, which are 1973Q1 and 2007Q1
-% against its own 1947Q1 start. Those indices are correct only for that start.
-% Appending new quarters does not move them, so the published values survive the
-% ordinary quarterly extension; a different sample start, or a data revision that
-% changes which quarter the series begins at, moves both breaks by the same offset
-% and nothing in the output says so. The estimates would still be produced, the
-% regimes would be the wrong ones, and the file would look exactly like a release.
-% So the configuration carries dates, this function resolves them against the
-% sample in front of it, and a configuration that no longer locates every break
-% inside that sample stops the run.
+% The published driver behind ucur_break2 builds its regime dummies from t0 = 105
+% and t1 = 241, which are 1973Q1 and 2007Q1 only against its own 1947Q1 start.
+% Appending quarters does not move them, but a different start, or a revision that
+% changes which quarter the series begins at, moves both breaks with nothing to
+% announce it. So the configuration carries dates and this resolves them against
+% the sample in front of it.
 %
-% WHAT IT ASSERTS. Four things, each an error rather than a warning:
-%
-%   the sample axis is quarterly and gapless     otherwise an index into it means
-%                                                nothing
-%   every break date is inside the sample        named, with the sample it was
-%                                                looked for in
-%   no break falls on the first or last quarter  a break there defines a regime
-%                                                with no observations in it
-%   the resolved indices strictly increase       so the regimes are ordered as the
-%                                                model reads them
-%
-% run_estimates.m calls this before it calls a model that takes breaks, and passes
-% the result rather than the dates, so that a model never parses a date.
-%
-% See also: estimates/preset.m, estimates/run_estimates.m.
+% Four assertions, each an error rather than a warning: the axis is quarterly and
+% gapless, every break is inside the sample, no break falls on the first or last
+% quarter, and the resolved indices strictly increase.
 
 [brk, brk_label] = quarter_number(break_dates, 'break_dates');
 [smp, smp_label] = quarter_number(sample_dates, 'sample_dates');
