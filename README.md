@@ -6,11 +6,11 @@ every quarter from public data.
 
 ## Status
 
-The data layer, all five models and the release pipeline are written. Each model reproduces the
-published driver it was taken from, draw for draw.
+The current vintage is **2026Q2**, released 2026-09-12 and tagged `v2026Q2`. It covers 1947Q1
+onward, except `biuc_lrexp`, which begins in 1960Q2 and ends where FRB/US `PTR` ends. Every check
+in `estimates/guardrails.m` passed; a release is promoted only when they all do.
 
-No estimate has been published yet. A release is promoted only when every check in
-`estimates/guardrails.m` passes.
+Each model reproduces the published driver it was taken from, draw for draw.
 
 ## The Three Series
 
@@ -29,7 +29,8 @@ revision tolerance is `max(0.20pp, 3 x MCSE)`, which separates a revision from t
 noise.
 
 Every release is frozen under `estimates/vintages/YYYYQq/` and tagged, so a paper can cite a
-fixed vintage. The first release creates those directories.
+fixed vintage. A frozen vintage carries the source data it was estimated on, so the SHA-256 values
+in its `metadata.json` refer to files beside them.
 
 ## The Five Models
 

@@ -1,7 +1,7 @@
 # Release calendar
 
 The series in `estimates/current/` are re-estimated four times a year and frozen as a vintage
-each time. No estimate has been published yet.
+each time.
 
 ## The dates
 
@@ -10,6 +10,7 @@ ended two months earlier.
 
 | Release | Estimates through | Vintage tag |
 |---|---|---|
+| 2026-09-12 | 2026Q2 | `v2026Q2` — released |
 | 2026-12-01 | 2026Q3 | `v2026Q3` |
 | 2027-03-01 | 2026Q4 | `v2026Q4` |
 | 2027-06-01 | 2027Q1 | `v2027Q1` |
@@ -75,21 +76,25 @@ behaving as specified, and the first thing to look at if its gap starts to diver
 
 ## Runtime
 
-**A model with no measured runtime does not go on the schedule.** Measured 2026-09-11 on the
-release machine, at the settings in `estimates/preset.m` and so with the marginal likelihood off:
+**A model with no measured runtime does not go on the schedule.** Measured on the release machine
+during the `v2026Q2` run, at the settings in `estimates/preset.m` and so with the marginal
+likelihood off:
 
 | model | minutes |
 |---|---|
-| `ucsv_sw07` | 0.4 |
-| `ucur_break2` | 0.8 |
-| `uc_2m` | 0.9 |
-| `ar_trend_bound` | 1.1 |
-| `biuc_lrexp` | 3.4 |
+| `ucsv_sw07` | 0.6 |
+| `ucur_break2` | 0.7 |
+| `ar_trend_bound` | 0.8 |
+| `uc_2m` | 2.9 |
+| `biuc_lrexp` | 35.4 |
 
-Six and a half minutes in series, four with two workers, so a quarterly run is not constrained by
-time. `model_lists` in `run_release.m` still lists no model as measured, and that stays until G7
-is settled: three of the five fail it at these chain lengths, so a longer chain would change
-these figures.
+About 41 minutes in series and 37 with two workers, so a quarterly run is not constrained by
+time. `biuc_lrexp` is almost all of it: its chain is 400,000 sweeps because shorter ones leave an
+effective sample below what G7 requires. All five are listed as measured in `model_lists`, which
+is what lets a scheduled run proceed without `AllowUnmeasured`.
+
+A model whose settings change needs re-measuring, because the figure that opened the schedule was
+taken at the old ones.
 
 ## If a release slips
 
@@ -100,4 +105,6 @@ cloud at all, and deleting both workflows changes nothing that is published.
 
 ## Release history
 
-None yet. The first entry will be `v2026Q3`.
+| Vintage | Released | Estimates through | Notes |
+|---|---|---|---|
+| `v2026Q2` | 2026-09-12 | 2026Q2 | First release. Out of cycle: 2026Q2 was due 1 September. `biuc_lrexp` ends 2026Q1, where `PTR` ends. |
