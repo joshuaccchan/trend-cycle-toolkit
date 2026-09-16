@@ -450,12 +450,12 @@ end
 function v = default_vintage()
 % default_vintage - the quarter a run produces when no vintage was named.
 %
-% The calendar quarter that ended before today: a release on 1 March 2027 is
-% 2026Q4. It is read off the calendar, never off the fetched data, on
-% purpose. The vintage names the quarter this run intends to produce, and
-% guardrail G3 then checks that the data reaches it - so a quarter the agency
-% has not published yet fails a check that says so, and does not silently
-% producing a release one quarter behind the one that was due.
+% The calendar quarter that ended before today: a run on 29 October 2026 is
+% 2026Q3. This default governs only a run started by hand. The Monday trigger
+% passes the vintage explicitly, taken from the newest quarter complete on FRED,
+% so a slipped BEA release cannot produce a vintage the data do not reach. On a
+% hand-started run, G3 checks that the data reach this quarter and stops the
+% release if they do not.
 
 qend = dateshift(datetime('now'), 'start', 'quarter') - caldays(1);
 v    = sprintf('%dQ%d', year(qend), ceil(month(qend)/3));

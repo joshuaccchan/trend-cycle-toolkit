@@ -1,2 +1,2 @@
-date,checked_utc,CPIAUCSL,GDPC1,SPF_CPI10,newest_complete,expected,release_due,published_vintage,status,note
-2026-09-14,2026-09-14T10:33:43Z,2026Q2,2026Q2,not-configured (phase 2),2026Q2,2026Q2,,2026Q2,ok,
+date,checked_utc,DPCERD3Q086SBEA,GDPC1,newest_complete,published_vintage,status,note
+2026-09-14,2026-09-14T10:33:43Z,,2026Q2,2026Q2,2026Q2,ok,watched CPIAUCSL (2026Q2) and the SPF before the switch to PCE

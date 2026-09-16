@@ -5,38 +5,42 @@ each time.
 
 ## The dates
 
-Releases go out on the **1st of March, June, September and December**, covering the quarter that
-ended two months earlier.
+**A release follows BEA's advance estimate of GDP**, which completes a quarter about a month after
+it ends. Both inputs the five models read come from that release: real GDP and the PCE price
+index. A scheduled task on the release machine runs `tools\run_update.ps1 -IfNewData` every Monday;
+it asks FRED for the newest quarter complete in both series and releases when that quarter is
+newer than the published vintage, so a release follows the advance estimate within a week. The vintage is taken from the data, so a BEA release that
+slips cannot be labelled with a quarter the data do not reach.
 
-| Release | Estimates through | Vintage tag |
+| Estimates through | Released after BEA's advance estimate, around | Vintage tag |
 |---|---|---|
-| 2026-09-12 | 2026Q2 | `v2026Q2` — released |
-| 2026-12-01 | 2026Q3 | `v2026Q3` |
-| 2027-03-01 | 2026Q4 | `v2026Q4` |
-| 2027-06-01 | 2027Q1 | `v2027Q1` |
-| 2027-09-01 | 2027Q2 | `v2027Q2` |
+| 2026Q2 | released 2026-09-12 | `v2026Q2` |
+| 2026Q3 | late October 2026 | `v2026Q3` |
+| 2026Q4 | late January 2027 | `v2026Q4` |
+| 2027Q1 | late April 2027 | `v2027Q1` |
+| 2027Q2 | late July 2027 | `v2027Q2` |
 
-**Why the 1st and not earlier.** BEA publishes three estimates of each quarter's real GDP about a
-month apart. On the 20th of the month only the *advance* estimate exists; the second lands in the
-last week. Releasing before then would build every gap and every trend-growth path on a number
-BEA revises a week later. GDP is the binding input and the only reason for the date. The PCE
-price index arrives in the same NIPA release, so both inputs to the five models move together
-and neither can be had earlier than the other.
+BEA publishes its schedule in advance, and it can change: in 2025 the advance estimate for the
+third quarter was cancelled during the government shutdown and replaced by a combined estimate on
+23 December. Triggering on the data rather than on a date is what makes that harmless.
+
+BEA revises each quarter twice more, about a month apart, and revises several years of history in
+its annual update. A release does not wait for those. The next release re-estimates the whole
+sample on the revised data, and guardrail G8 judges only dates more than eight quarters before
+the sample end, so revisions to recent quarters cannot fail it.
 
 `PTR` is the input a release now waits for. It is the whole of `biuc_lrexp`'s expectations
 series rather than its early half, so when the Board has not refreshed the FRB/US package
 that model runs a quarter behind the other four. The release does not stall for it: the other
 four publish on time and `biuc_lrexp` catches up at the next vintage.
 
-Agency release dates are deliberately not tabulated here — check the BEA and Federal Reserve
-Board calendars in the week before a release. A plausible-looking date invented here would be worse
-than none.
+Exact agency dates are not tabulated here; BEA's release schedule has them.
 
 ## What a release checks before it publishes
 
 - **The reference quarter must match.** FRED returns the running quarter as a present row with an
-  empty value. That row is dropped, and the run then asserts the last complete quarter is the one
-  this calendar names. A mismatch stops the release rather than publishing a quarter short.
+  empty value. That row is dropped, and the run then asserts the data reach the vintage being
+  released. A mismatch stops the release rather than publishing a quarter short.
 - **Every fetch is validated by magic bytes, not HTTP status.** The Philadelphia Fed answers
   HTTP 200 with an HTML error page for an unknown path, so a status check passes a document that
   is not a spreadsheet. A failed validation reuses the last archived source vintage and opens an
@@ -99,9 +103,19 @@ taken at the old ones.
 ## If a release slips
 
 The previous vintage stays current and correctly labeled — every published file carries its
-vintage — and the table above is amended with the new date. A slipped release does not become a
-skipped one. There is no cloud fallback and the cloud never estimates; the whole system needs no
-cloud at all, and deleting both workflows changes nothing that is published.
+vintage. A slipped release does not become a skipped one: the trigger checks again every Monday.
+
+**A release the guardrails refuse is not retried automatically**, since that would re-run forty
+minutes of estimation every week. The trigger leaves `build\release_failed_<vintage>.txt` naming the
+staged output to inspect, and does not try that vintage again until the file is deleted.
+
+**The freshness watchdog notices a trigger that has not fired.** Every Monday it compares FRED
+with the published vintage, and when the data have been ahead of the estimates at two consecutive
+checks it opens an issue. The usual causes are a refused release and the release machine being
+off.
+
+There is no cloud fallback and the cloud never estimates; deleting both workflows changes nothing
+that is published.
 
 ## Release history
 

@@ -79,8 +79,10 @@ and the published values they depart from; `estimates/README.md` carries the mea
 
 ## How the Estimates Update
 
-Estimation runs on one machine, on the 1st of March, June, September and December, driven by
-`tools/run_update.ps1`, which commits, tags and pushes what the run promoted. A release is
+Estimation runs on one machine, shortly after BEA's advance estimate of GDP completes each quarter,
+about a month after the quarter ends. A scheduled task runs `tools/run_update.ps1 -IfNewData` every Monday,
+which checks FRED for a new quarter and, when there is one, estimates, commits, tags and pushes
+what the run promoted. A release is
 promoted only when every check in `estimates/guardrails.m` passes; a refused release leaves the
 tracked tree untouched and its report under `build/`. GitHub Actions runs a weekly freshness
 check and the unit suite. `RELEASE_CALENDAR.md` lists the dates, the inputs each release
