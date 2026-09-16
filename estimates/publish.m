@@ -106,7 +106,8 @@ files{end+1} = write_metadata(results, report, manifest, vintage, opts.Mode, ...
                               fullfile(cur, 'metadata.json'));
 
 % ---- figures --------------------------------------------------------------
-files = [files, draw_figures(results, vintage, fig)];
+% Drawn from the CSVs just written, so a figure can only show published numbers.
+files = [files, draw_figures(cur, vintage, fig)'];
 
 % ---- the revision table, from the second release onward -------------------
 if ~isempty(revs) && height(revs) > 0
@@ -251,36 +252,6 @@ meta.sources = manifest;
 fid = fopen(p, 'w');
 fprintf(fid, '%s\n', jsonencode(meta, 'PrettyPrint', true));
 fclose(fid);
-end
-
-
-function out = draw_figures(results, vintage, dir)
-% One figure per series: the posterior mean and the 90 per cent band per model.
-out = {};
-for s = {'trend_inflation', 'output_gap', 'trend_growth'}
-    name = s{1};
-    have = arrayfun(@(r) isfield(r.series, name), results);
-    if ~any(have), continue, end
-    f = figure('Visible', 'off', 'Position', [100 100 900 450]);
-    ax = axes(f); hold(ax, 'on'); %#ok<LAXES>
-    for k = find(have)
-        ser = results(k).series.(name);
-        m = ser.summary;
-        fill(ax, [m.date; flipud(m.date)], [m.p05; flipud(m.p95)], [0.6 0.7 0.85], ...
-            'FaceAlpha', 0.25, 'EdgeColor', 'none', 'HandleVisibility', 'off');
-        plot(ax, m.date, m.mean, 'LineWidth', 1.2, 'DisplayName', ...
-            strrep(results(k).model, '_', '\_'));
-    end
-    yline(ax, 0, ':', 'HandleVisibility', 'off');
-    title(ax, sprintf('%s, vintage %s', strrep(name, '_', ' '), vintage));
-    ylabel(ax, 'per cent, annualized'); legend(ax, 'Location', 'best'); box(ax, 'on');
-    for ext = {'png', 'pdf'}
-        p = fullfile(dir, [name '.' ext{1}]);
-        exportgraphics(ax, p, 'Resolution', 150);
-        out{end+1} = p; %#ok<AGROW>
-    end
-    close(f);
-end
 end
 
 

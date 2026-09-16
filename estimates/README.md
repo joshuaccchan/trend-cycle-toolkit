@@ -1,7 +1,7 @@
 # The release pipeline
 
 Everything that turns fetched data into a published vintage. `run_release.m` at the repository
-root is the driver; these seven functions are the stages it calls.
+root is the driver; these eight functions are the stages it calls.
 
 `setup.m` keeps `estimates/` off the path — `run_release` adds it for the run — so calling one
 of these by hand needs `addpath estimates` first.
@@ -19,9 +19,9 @@ that could be mistaken for a published number.
 
 ## The interface
 
-These seven have almost no callers — six are called from `run_release.m` and the seventh from
-`run_estimates.m` — so a header that drifts from its call site goes unnoticed until a release run
-reaches it. This table, those headers and `run_release.m` agree argument for argument.
+These eight have almost no callers — six are called from `run_release.m`, `resolve_break_dates`
+from `run_estimates.m` and `draw_figures` from `publish.m` — so a header that drifts from its call
+site goes unnoticed until a release run reaches it. This table, those headers and `run_release.m` agree argument for argument.
 
 | Call | Returns |
 |---|---|
@@ -31,9 +31,10 @@ reaches it. This table, those headers and `run_release.m` agree argument for arg
 | `previous = load_previous_vintage(root, vintage)` | The newest archived vintage strictly older than `vintage`. Empty on the first release |
 | `revs = revisions(results, previous, data, Name, Value)` | The revision table, decomposed into the components asked for. Option `Components`, default `{'sample'}` |
 | `report = guardrails(results, previous, data, revs, Name, Value)` | One report struct: `pass`, `nfail`, `checks`, `vintage`, `seasonal`. Options `Vintage`, `SeasonalRevision` |
-| `files = publish(results, report, revs, manifest, stagedir, Name, Value)` | The files written, in write order. Options `Vintage`, `Promote`, `Mode`. The only function here that writes into `estimates/` |
+| `files = publish(results, report, revs, manifest, stagedir, Name, Value)` | The files written, in write order. Options `Vintage`, `Promote`, `Mode`, `Dest`. The only function here that writes into `estimates/` |
+| `files = draw_figures(csvdir, vintage, outdir)` | A PNG and a PDF per series, drawn from the published CSVs in `csvdir`, so a figure shows only published numbers and any vintage can be redrawn without re-estimating |
 
-Two conventions hold across all seven: positional arguments are the things a call cannot do
+Two conventions hold across all eight: positional arguments are the things a call cannot do
 without, so a missing one errors instead of silently skipping a check; and every option name is
 capitalized, matching the seven `run_release.m` itself takes.
 

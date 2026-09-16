@@ -298,7 +298,8 @@ stages = { ...
     'load the previous published vintage',  'estimates/load_previous_vintage.m'
     'sample-extension revision chain',      'estimates/revisions.m'
     'guardrails',                           'estimates/guardrails.m'
-    'stage, promote, figures, metadata',    'estimates/publish.m'
+    'stage, promote, metadata',             'estimates/publish.m'
+    'draw the published figures',           'estimates/draw_figures.m'
     };
 
 % The suite is only a stage when the run is going to call it.
