@@ -30,7 +30,7 @@ site goes unnoticed until a release run reaches it. This table, those headers an
 | `results = run_estimates(cfg, data, Name, Value)` | One result struct per model: thinned draws, summaries, diagnostics, acceptance rates, seed, settings, elapsed time. Options `SampleEnd`, `Parallel`, `StageDir` |
 | `previous = load_previous_vintage(root, vintage)` | The newest archived vintage strictly older than `vintage`. Empty on the first release |
 | `revs = revisions(results, previous, data, Name, Value)` | The revision table, decomposed into the components asked for. Option `Components`, default `{'sample'}` |
-| `report = guardrails(results, previous, data, revs, Name, Value)` | One report struct: `pass`, `nfail`, `checks`, `vintage`, `seasonal`. Options `Vintage`, `SeasonalRevision` |
+| `report = guardrails(results, previous, data, revs, Name, Value)` | One report struct: `pass`, `nfail`, `checks`, `vintage`, `revision`. Option `Vintage` |
 | `files = publish(results, report, revs, manifest, stagedir, Name, Value)` | The files written, in write order. Options `Vintage`, `Promote`, `Mode`, `Dest`. The only function here that writes into `estimates/` |
 | `files = draw_figures(csvdir, vintage, outdir)` | A PNG and a PDF per series, drawn from the published CSVs in `csvdir`, so a figure shows only published numbers and any vintage can be redrawn without re-estimating |
 

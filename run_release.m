@@ -41,8 +41,6 @@
 %   'AllowUnmeasured'   run a model whose runtime has not been measured (default
 %                       false), which is all five today.
 %   'RunTests'          run the local unit suite first (default true).
-%   'SeasonalRevision'  widen the revision tolerance for February's CPI
-%                       seasonal-factor re-estimation. Default: true in March.
 %   'DryRun'            do everything except promote (default false).
 %   'Mode'              'local' (default) or 'cloud-backup'. The latter estimates
 %                       serially and records in metadata.json that the numbers came
@@ -215,7 +213,7 @@ revs     = revisions(results, previous, data, ...
                'Components', {'sample'});
 
 % ---- 7. guardrails -------------------------------------------------------
-% Every check that runs must pass, and on the first release the two that compare
+% Every check that runs must pass, and on the first release the four that compare
 % against a previous vintage do not run and are recorded as such. Bounded models
 % inside their bounds, acceptance rates in band against the reference run,
 % inefficiency factors and MCSE computed and asserted, the new sample
@@ -227,9 +225,7 @@ revs     = revisions(results, previous, data, ...
 % comprehensive revision will shift 100*log(GDPC1) by a constant at every date,
 % and a level-based check would fail catastrophically for a rebasing that
 % changes nothing economically.
-report = guardrails(results, previous, data, revs, ...
-             'Vintage', vintage, ...
-             'SeasonalRevision', opt.SeasonalRevision);
+report = guardrails(results, previous, data, revs, 'Vintage', vintage);
 
 % ---- 8. stage ------------------------------------------------------------
 % The tidy and wide CSVs, diagnostics.csv and the revision table, written under
@@ -348,7 +344,6 @@ opt = struct( ...
     'Models',           {product}, ...
     'AllowUnmeasured',  false, ...
     'RunTests',         true, ...
-    'SeasonalRevision', [], ...
     'DryRun',           false, ...
     'Mode',             'local');
 
@@ -376,15 +371,6 @@ end
 opt.Models = opt.Models(~cellfun(@isempty, opt.Models));
 if isempty(opt.Models)
     opt.Models = product;
-end
-
-% The March release is the one that follows February's CPI seasonal-factor
-% re-estimation, which moves the whole seasonally adjusted history and with it
-% every trend inflation estimate far behind the sample end. Widening the
-% tolerance is expected, once a year, and is recorded in metadata.json by
-% guardrails.m, not explained after the fact by whoever is on duty.
-if isempty(opt.SeasonalRevision)
-    opt.SeasonalRevision = (month(datetime('now')) == 3);
 end
 end
 

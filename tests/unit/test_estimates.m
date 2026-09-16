@@ -138,7 +138,7 @@ function testTheFirstReleaseMarksG3AndG8NotApplicableRatherThanPassed(t)
 % A check that could not run has not passed, and a reader of the first vintage
 % is entitled to see which checks stood behind it.
 rep = guardrails(fake_result(), struct([]), fake_data(), table(), 'Vintage', '2026Q2');
-for id = ["G3", "G8"]
+for id = ["G3", "G8", "G9"]
     rows = rep.checks(rep.checks.id == id, :);
     verifyNotEmpty(t, rows);
     verifyTrue(t, all(rows.status == "n/a"));
@@ -162,6 +162,51 @@ d.ptr.value(5) = d.ptr.value(5) + 1;   % no longer flat
 rep = guardrails(fake_result(), struct([]), d, table(), 'Vintage', '2026Q2');
 verifyFalse(t, rep.pass);
 verifyTrue(t, any(rep.checks.id == "G2" & rep.checks.status == "fail"));
+end
+
+
+% ---- G9 revised input history ---------------------------------------------
+function testARevisedInputHistoryWidensG8(t)
+% A 0.5pp move in an old trend inflation estimate fails G8 at the ordinary 0.20pp
+% tolerance. When the input history was revised underneath it - as BEA's annual
+% update does - the same move is expected, and G8 passes at three times the
+% tolerance.
+revs = one_revision(0.5);
+
+[prev, data] = g9_fixture(false, 1);
+rep = guardrails(fake_result(), prev, data, revs, 'Vintage', '2015Q1');
+verifyFalse(t, rep.revision.detected);
+verifyEqual(t, rep.revision.factor, 1);
+verifyTrue(t, any(rep.checks.id == "G8" & rep.checks.status == "fail"), ...
+    'with unrevised inputs, a 0.5pp move must fail G8');
+
+[prev, data] = g9_fixture(true, 1);
+rep = guardrails(fake_result(), prev, data, revs, 'Vintage', '2015Q1');
+verifyTrue(t, rep.revision.detected);
+verifyEqual(t, rep.revision.factor, 3);
+verifyEqual(t, rep.revision.pce_inflation_max, 0.5, 'AbsTol', 1e-9);
+verifyFalse(t, any(rep.checks.id == "G8" & rep.checks.status == "fail"), ...
+    'with revised inputs, the same move must pass the widened tolerance');
+end
+
+
+function testARebaseIsNotARevision(t)
+% A new base year rescales every level and leaves every growth rate alone.
+[prev, data] = g9_fixture(false, 1.1);
+rep = guardrails(fake_result(), prev, data, one_revision(0.05), 'Vintage', '2015Q1');
+verifyFalse(t, rep.revision.detected);
+verifyEqual(t, rep.revision.pce_inflation_max, 0, 'AbsTol', 1e-9);
+verifyEqual(t, rep.revision.gdp_growth_max, 0, 'AbsTol', 1e-9);
+end
+
+
+function testAVintageWithoutSourcesLeavesG9NotApplicable(t)
+[prev, data] = g9_fixture(false, 1);
+prev.sources = struct();
+rep = guardrails(fake_result(), prev, data, one_revision(0.05), 'Vintage', '2015Q1');
+rows = rep.checks(rep.checks.id == "G9", :);
+verifyTrue(t, all(rows.status == "n/a"));
+verifyEqual(t, rep.revision.factor, 1);
 end
 
 
@@ -199,8 +244,8 @@ r = fake_result();
 rep = guardrails(r, struct([]), fake_data(), table(), 'Vintage', '2026Q2');
 stage = tempname; mkdir(stage);
 dest = tempname; mkdir(dest);
-c1 = onCleanup(@() rmdir(stage, 's')); %#ok<NASGU>
-c2 = onCleanup(@() rmdir(dest, 's'));  %#ok<NASGU>
+c1 = onCleanup(@() rmdir(stage, 's'));
+c2 = onCleanup(@() rmdir(dest, 's')); 
 
 src.PCE = table((datetime(2000,1,1) + calquarters(0:2))', [100;101;102], ...
     'VariableNames', {'date','value'});
@@ -227,8 +272,8 @@ r = fake_result();
 rep = guardrails(r, struct([]), fake_data(), table(), 'Vintage', '2026Q2');
 stage = tempname; mkdir(stage);
 dest = tempname; mkdir(dest);
-c1 = onCleanup(@() rmdir(stage, 's')); %#ok<NASGU>
-c2 = onCleanup(@() rmdir(dest, 's'));  %#ok<NASGU>
+c1 = onCleanup(@() rmdir(stage, 's'));
+c2 = onCleanup(@() rmdir(dest, 's')); 
 src.PCE = table((datetime(2000,1,1) + calquarters(0:2))', [100;101;102], ...
     'VariableNames', {'date','value'});
 manifest = uc.data.vintage_stamp(src, stage, '2026Q2');
@@ -284,6 +329,46 @@ end
 
 
 % ---------------------------------------------------------------------------
+function revs = one_revision(move)
+% One revision to an old trend inflation estimate, well inside G8's window.
+revs = table(datetime(2005, 1, 1), "ucsv_sw07", "trend_inflation", move, 0, ...
+    'VariableNames', {'date', 'model', 'series', 'total', 'sample'});
+end
+
+
+function [prev, data] = g9_fixture(revised, rebase)
+% A previous vintage's archived input levels and this release's model-ready
+% inputs, 1960Q1 to 2014Q4. revised adds 0.5pp to 1990-1995 inflation in the
+% previous vintage; rebase multiplies the previous vintage's levels by a constant.
+dates = (datetime(1960, 1, 1) + calquarters(0:219))';
+n = numel(dates);
+infl_new = 3 + sin((1:n-1)' / 6);
+gdp_growth = 3 + cos((1:n-1)' / 9);
+
+infl_old = infl_new;
+if revised
+    old = dates(2:end) >= datetime(1990, 1, 1) & dates(2:end) <= datetime(1995, 10, 1);
+    infl_old(old) = infl_old(old) + 0.5;
+end
+
+pce_old = 100 * exp(cumsum([0; infl_old]) / 400) * rebase;
+gdp = 1000 * exp(cumsum([0; gdp_growth]) / 400);
+
+prev = struct();
+prev.vintage = '2014Q4';
+prev.path = '';
+prev.series = struct();
+prev.metadata = struct();
+prev.sources = struct( ...
+    'PCE',   table(dates, pce_old,     'VariableNames', {'date', 'value'}), ...
+    'GDPC1', table(dates, gdp * rebase, 'VariableNames', {'date', 'value'}));
+
+data = fake_data();
+data.infl = table(dates(2:end), infl_new, 'VariableNames', {'date', 'value'});
+data.lgdp = table(dates, 100 * log(gdp), 'VariableNames', {'date', 'value'});
+end
+
+
 function r = fake_result()
 % One model's worth of output, shaped exactly as run_estimates returns it.
 nd = 400;

@@ -62,13 +62,15 @@ Vintages are frozen and never overwritten, which is what makes the archive a rea
 sample end that moves by more than `max(0.20pp, 3 x MCSE)` is flagged; more than 1.0pp fails the
 run pending a human.
 
-Two breakages are scheduled rather than accidental:
+Two breakages are expected rather than accidental:
 
-- **February, every year.** BLS re-estimates five years of CPI seasonal factors, which moves the
-  seasonally adjusted history itself. The scale is not small: recomputing a 2013-vintage inflation
-  series from today's price index gives differences under 0.011pp before 2000 but up to 0.84pp in
-  2010-2011. The 1 March release therefore runs with `'SeasonalRevision', true`, which widens the
-  tolerance and records the widening in that vintage's `metadata.json`.
+- **BEA's annual update, every year.** It revises several years of PCE and GDP history, which moves
+  the smoothed estimates at dates G8 judges; in 2026 it is on 30 September. The release after it is
+  not told this. Guardrail G9 compares PCE inflation and GDP growth as the models read them now
+  against the same rates rebuilt from the previous vintage's archived inputs, over quarters more
+  than eight before its sample end. When either moved by more than 0.02pp, the history was
+  revised, and G8's tolerance is widened threefold. The comparison, the widening and the size of
+  the largest move are recorded in that vintage's `metadata.json`.
 - **The next GDP comprehensive revision.** Rebasing shifts `100*log(GDPC1)` by a constant at every
   date. Tolerances apply to the gap and to growth rates, never to the level, and a base change is
   detected as a mean shift over an overlapping window and triggers a re-baseline rather than a

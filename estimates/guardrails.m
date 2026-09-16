@@ -1,8 +1,7 @@
 % guardrails - every check that must pass before a release is allowed to promote.
 %
 %   report = guardrails(results, previous, data, revs)
-%   report = guardrails(results, previous, data, revs, 'Vintage', '2026Q3', ...
-%                       'SeasonalRevision', true)
+%   report = guardrails(results, previous, data, revs, 'Vintage', '2026Q3')
 %
 % All four arguments are positional and required: the results from run_estimates,
 % the previous vintage from load_previous_vintage, the series estimated on, and the
@@ -14,12 +13,11 @@
 %   report.nfail     how many failed.
 %   report.checks    a table: id, model, statistic, value, tolerance, status, note.
 %   report.vintage   the vintage checked.
-%   report.seasonal  whether the G9 widening was applied, and by what factor.
+%   report.revision  what G9 found in the input history, and the factor G8 was
+%                    widened by.
 %
 % OPTIONS
-%   'Vintage'           'YYYYQq', recorded in the report and in metadata.json.
-%   'SeasonalRevision'  widen the G8 tolerance by 3 for the February CPI
-%                       seasonal-factor re-estimation. Gated on the run month.
+%   'Vintage'  'YYYYQq', recorded in the report and in metadata.json.
 %
 % THE CHECKS
 %
@@ -42,12 +40,17 @@
 %   G8   for any date more than eight quarters before the sample end, a move
 %        against the previous vintage over max(0.20pp, 3 x MCSE) fails, and one
 %        over 1.0pp is held for a person
-%   G9   the February widening, recorded and never silent
+%   G9   revised input history. PCE inflation and GDP growth as the models read
+%        them now, against the same rates rebuilt from the previous vintage's
+%        archived inputs, over quarters more than eight before its sample end.
+%        When either moved by more than 0.02pp, the history was revised - BEA's
+%        annual update does this every year - and G8's tolerance is widened
+%        threefold. Recorded in metadata.json whether or not it widens
 %   G10  a GDP base change, detected as a near-constant shift across the overlap
 %        and recorded rather than refused
 %
-% THE FIRST RELEASE has no predecessor, so G3, G8 and G10 are written with status
-% n/a and the reason, never pass - a check that could not run has not passed.
+% THE FIRST RELEASE has no predecessor, so G3, G8, G9 and G10 are written with
+% status n/a and the reason, never pass - a check that could not run has not passed.
 % report.pass is decided on the checks that did run.
 %
 % ON FAILURE nothing is promoted, the previous release stays where it is, and the
@@ -61,14 +64,15 @@ arguments
     data (1,1) struct
     revs
     opts.Vintage {mustBeTextScalar} = ''
-    opts.SeasonalRevision (1,1) logical = false
 end
 
 MIN_ESS      = 100;     % G7
 REV_FLOOR    = 0.20;    % G8, percentage points
 REV_MCSE     = 3;       % G8
 REV_FAIL     = 1.00;    % G8, percentage points
-SEASONAL_FACTOR = 3;    % G9
+REVISION_FLOOR  = 0.02; % G9, percentage points, annualized
+REVISION_LAG    = 8;    % G9, quarters before the previous sample end
+REVISION_FACTOR = 3;    % G9
 
 rows = {};
 first_release = isempty(previous) || ~isfield(previous, 'series');
@@ -193,13 +197,49 @@ for k = 1:numel(results)
         sprintf('worst: %s', d.parameter(find(ess == min(ess), 1)))); %#ok<AGROW>
 end
 
-% ---- G8 revision tolerance, and G9 the February widening -------------------
+% ---- G9 revised input history ---------------------------------------------
+% Runs before G8 because it sets G8's tolerance. Growth rates are compared for
+% both series, so a change of base year - which rescales every level and leaves
+% every growth rate alone - is not mistaken for a revision.
 widen = 1;
-seasonal = struct('applied', opts.SeasonalRevision, 'factor', 1, 'max_shift', NaN);
-if opts.SeasonalRevision
-    widen = SEASONAL_FACTOR;
-    seasonal.factor = SEASONAL_FACTOR;
+revision = struct('detected', false, 'factor', 1, 'window_end', '', ...
+    'pce_inflation_max', NaN, 'gdp_growth_max', NaN, 'largest_move', NaN);
+have_sources = ~first_release && isfield(previous, 'sources') ...
+    && all(isfield(previous.sources, {'PCE', 'GDPC1'}));
+
+if first_release
+    rows{end+1} = na('G9', 'all', 'revised input history', ...
+        'first release: nothing to compare against');
+elseif ~have_sources
+    rows{end+1} = na('G9', 'all', 'revised input history', ...
+        'the previous vintage archived no source data');
+else
+    wend = min(max(previous.sources.PCE.date), max(previous.sources.GDPC1.date)) ...
+        - calquarters(REVISION_LAG);
+    new_gdp = table(data.lgdp.date(2:end), 4 * diff(data.lgdp.value), ...
+        'VariableNames', {'date', 'value'});
+    [pce_max, pce_n] = largest_change(growth_of(previous.sources.PCE), data.infl, ...
+        wend, REVISION_FLOOR);
+    [gdp_max, gdp_n] = largest_change(growth_of(previous.sources.GDPC1), new_gdp, ...
+        wend, REVISION_FLOOR);
+
+    detected = max(pce_max, gdp_max) > REVISION_FLOOR;
+    if detected, widen = REVISION_FACTOR; end
+    revision = struct('detected', detected, 'factor', widen, 'window_end', qlabel(wend), ...
+        'pce_inflation_max', pce_max, 'gdp_growth_max', gdp_max, 'largest_move', NaN);
+
+    rows{end+1} = row('G9', 'PCE', 'largest revision to past inflation', pce_max, NaN, true, ...
+        sprintf('%d quarters through %s moved more than %.2fpp', ...
+                pce_n, qlabel(wend), REVISION_FLOOR));
+    rows{end+1} = row('G9', 'GDPC1', 'largest revision to past GDP growth', gdp_max, NaN, true, ...
+        sprintf('%d quarters through %s moved more than %.2fpp', ...
+                gdp_n, qlabel(wend), REVISION_FLOOR));
+    rows{end+1} = row('G9', 'all', 'G8 tolerance factor', widen, NaN, true, ...
+        ternary(detected, 'widened: the input history was revised', ...
+                          'unchanged: the input history was not revised'));
 end
+
+% ---- G8 revision tolerance --------------------------------------------------
 
 if first_release
     rows{end+1} = na('G8', 'all', 'revision tolerance', ...
@@ -233,7 +273,7 @@ else
             rows{end+1} = row('G8', r.model, [name ' largest revision'], worst, ...
                 REV_FAIL * widen, worst <= REV_FAIL * widen, ...
                 'a move this large is held for a person'); %#ok<AGROW>
-            seasonal.max_shift = max([seasonal.max_shift, worst]);
+            revision.largest_move = max([revision.largest_move, worst]);
         end
     end
 end
@@ -263,7 +303,7 @@ report.checks = checks;
 report.nfail = sum(checks.status == "fail");
 report.pass = report.nfail == 0;
 report.vintage = char(opts.Vintage);
-report.seasonal = seasonal;
+report.revision = revision;
 end
 
 
@@ -273,6 +313,28 @@ if ok, st = "pass"; else, st = "fail"; end
 t = table(string(id), string(model), string(statistic), value, tolerance, st, ...
     string(note), 'VariableNames', ...
     {'id', 'model', 'statistic', 'value', 'tolerance', 'status', 'note'});
+end
+
+
+function t = growth_of(levels)
+% 400 times the log difference: annualized per cent, the transform the models read.
+d = levels.date;
+if ~isdatetime(d), d = datetime(d); end
+t = table(d(2:end), 400 * diff(log(levels.value)), 'VariableNames', {'date', 'value'});
+end
+
+
+function [m, n] = largest_change(old, new, window_end, floor)
+% The largest absolute change between two vintages of a rate, and how many quarters
+% moved by more than floor, over the dates both carry up to window_end.
+[d, io, in] = intersect(old.date, new.date);
+keep = d <= window_end;
+delta = abs(new.value(in(keep)) - old.value(io(keep)));
+if isempty(delta)
+    m = 0; n = 0;
+else
+    m = max(delta); n = sum(delta > floor);
+end
 end
 
 

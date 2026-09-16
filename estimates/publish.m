@@ -227,7 +227,7 @@ if strcmp(mode, 'cloud-backup')
                       'not byte-identical to a local run'];
 end
 meta.guardrails = struct('pass', report.pass, 'nfail', report.nfail, ...
-                         'seasonal', report.seasonal);
+                         'revision', report.revision);
 
 m = struct([]);
 for k = 1:numel(results)

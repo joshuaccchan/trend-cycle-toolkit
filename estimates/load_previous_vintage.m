@@ -4,8 +4,9 @@
 %
 % Returns the newest frozen release under estimates/vintages/ strictly older than
 % the vintage being produced, as a struct with vintage, path, series (one field per
-% published series, each the tidy table current/ ships), diagnostics and metadata.
-% guardrails checks against it and revisions re-runs its sample on the new data.
+% published series, each the tidy table current/ ships), sources (the PCE and GDPC1
+% levels that vintage was estimated on), diagnostics and metadata. guardrails
+% checks against it and revisions re-runs its sample on the new data.
 %
 % root is passed in rather than computed here so a test can point this at a fixture
 % tree. vintage is 'YYYYQq'; what comes back is the newest below it, which is the
@@ -74,6 +75,17 @@ for s = {'trend_inflation', 'output_gap', 'trend_growth'}
     f = fullfile(p, [s{1} '.csv']);
     if isfile(f)
         previous.series.(s{1}) = readtable(f, 'TextType', 'string');
+    end
+end
+
+% The inputs that vintage was estimated on. G9 compares them with this release's.
+previous.sources = struct();
+for s = {'PCE', 'GDPC1'}
+    f = fullfile(p, 'sources', [s{1} '.csv']);
+    if isfile(f)
+        t = readtable(f, 'TextType', 'string');
+        if ~isdatetime(t.date), t.date = datetime(t.date); end
+        previous.sources.(s{1}) = t;
     end
 end
 
