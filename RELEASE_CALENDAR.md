@@ -57,6 +57,9 @@ date uses the whole sample, so extending it by a quarter moves the entire path; 
 values fixed would publish a series no model produced.
 
 Vintages are frozen and never overwritten, which is what makes the archive a real-time record.
+One vintage has been amended, by addition only: on 2026-09-16 `uc_ma` was added to 2026Q2,
+estimated on the inputs archived with it, and every value 2026Q2 had already published is
+unchanged. Tag `v2026Q2` keeps the original files and `v2026Q2.1` the amended ones.
 
 **Tolerances are anchored to Monte Carlo error.** A value more than eight quarters before the
 sample end that moves by more than `max(0.20pp, 3 x MCSE)` is flagged; more than 1.0pp fails the
@@ -125,3 +128,4 @@ that is published.
 | Vintage | Released | Estimates through | Notes |
 |---|---|---|---|
 | `v2026Q2` | 2026-09-12 | 2026Q2 | First release. Out of cycle: 2026Q2 was due 1 September. `biuc_lrexp` ends 2026Q1, where `PTR` ends. |
+| `v2026Q2.1` | 2026-09-16 | 2026Q2 | Adds `uc_ma`, estimated on the 2026Q2 archived inputs. Every value `v2026Q2` published is unchanged. |

@@ -2,14 +2,25 @@
   "vintage": "2026Q2",
   "generated_utc": "2026-09-12T16:55:10Z",
   "git_sha": "c5f7d5f141f1df27cea5f985eec32de100e887ba",
+  "amendments": [
+    {
+      "date_utc": "2026-09-17T00:14:03Z",
+      "git_sha": "075011589daf7185c76c5da62ebeea0bcd4e565d",
+      "added_models": ["uc_ma"],
+      "note": "uc_ma estimated on this vintage's archived inputs; no value published for the other five models changed"
+    }
+  ],
   "mode": "local",
   "guardrails": {
     "pass": true,
     "nfail": 0,
-    "seasonal": {
-      "applied": false,
+    "revision": {
+      "detected": false,
       "factor": 1,
-      "max_shift": null
+      "window_end": "",
+      "pce_inflation_max": null,
+      "gdp_growth_max": null,
+      "largest_move": null
     }
   },
   "models": [
@@ -132,6 +143,43 @@
       }
     },
     {
+      "model": "uc_ma",
+      "seed": 6,
+      "sample_start": "1947Q2",
+      "sample_end": "2026Q2",
+      "ndraws": 1000,
+      "elapsed_seconds": 38.1887101,
+      "series": [
+        "trend_inflation"
+      ],
+      "settings": {
+        "model": "uc_ma",
+        "nsim": 11000,
+        "burnin": 1000,
+        "thin": 10,
+        "seed": 6,
+        "sample_start": "1947Q2",
+        "compute_ml": false,
+        "ml_reps": 0,
+        "trunc_lag": 50,
+        "inputs": [
+          "DPCERD3Q086SBEA"
+        ],
+        "bounds": [],
+        "rho_bound": [],
+        "break_dates": []
+      },
+      "cites": "MASV_matlab.zip/UC_MA.m",
+      "accept": {
+        "psi": 0.95536363636363641,
+        "phih": 0.75454545454545452
+      },
+      "versions": {
+        "matlab": "25.2.0.3150157 (R2025b) Update 4",
+        "release": "2025b"
+      }
+    },
+    {
       "model": "uc_2m",
       "seed": 4,
       "sample_start": "1947Q1",
@@ -243,7 +291,7 @@
       "name": "PTR_EXPECT",
       "file": "sources/PTR_EXPECT.csv",
       "url": "",
-      "fetched": null,
+      "fetched": [],
       "rows": 265,
       "first": "1960Q1",
       "last": "2026Q1",

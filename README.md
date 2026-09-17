@@ -10,7 +10,9 @@ The current vintage is **2026Q2**, released 2026-09-12 and tagged `v2026Q2`. It 
 onward, except `biuc_lrexp`, which begins in 1960Q2 and ends where FRB/US `PTR` ends. Every check
 in `estimates/guardrails.m` passed; a release is promoted only when they all do.
 
-`uc_ma` joins with the 2026Q3 release, so the 2026Q2 files hold the other five models.
+`uc_ma` was added to the 2026Q2 vintage on 2026-09-16, estimated on the inputs archived with it.
+No value already published for the other five models changed. `metadata.json` records the
+amendment; tag `v2026Q2.1` marks the amended vintage and `v2026Q2` the original.
 
 Each model reproduces the published driver it was taken from, draw for draw.
 
