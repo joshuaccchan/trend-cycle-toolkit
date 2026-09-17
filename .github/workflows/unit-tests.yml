@@ -20,12 +20,12 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Statistics is needed by nearly every sampler; Optimization by the psi steps
       # of biuc_lrexp and uc_ma, which run fminsearch and fminunc.
       - name: Set up MATLAB
-        uses: matlab-actions/setup-matlab@v2
+        uses: matlab-actions/setup-matlab@v3
         with:
           release: R2025b
           products: >
@@ -33,6 +33,6 @@ jobs:
             Optimization_Toolbox
 
       - name: Run the unit suite
-        uses: matlab-actions/run-command@v2
+        uses: matlab-actions/run-command@v3
         with:
           command: run('tests/unit/run_unit_tests.m')
