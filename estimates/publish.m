@@ -30,8 +30,9 @@
 %   output_gap.csv             {mean, p05, p16, p84, p95, mcse}
 %   trend_growth.csv
 %   trend_inflation_wide.csv   date, then one model to a column, ragged at the head
-%   diagnostics.csv            inefficiency factor and MCSE per parameter and date,
-%                              with Geweke Z on the scalar parameters and selected dates
+%   diagnostics.csv            inefficiency factor and MCSE per model, parameter and
+%                              date, with Geweke Z on the scalar parameters and
+%                              selected dates
 %   guardrails.csv             the check table, written pass or fail
 %   trend_cycle_estimates.xlsx the three series in one workbook
 %   metadata.json              vintage, run time, git SHA, per-series URL, fetch
@@ -87,14 +88,17 @@ for s = {'trend_inflation', 'output_gap', 'trend_growth'}
     files{end+1} = write_csv(t, fullfile(cur, [s{1} '.csv'])); %#ok<AGROW>
 end
 
-% ---- one wide file, for the series with three models ----------------------
+% ---- one wide file, for the series with four models -----------------------
 w = wide_series(results, 'trend_inflation');
 if ~isempty(w)
     files{end+1} = write_csv(w, fullfile(cur, 'trend_inflation_wide.csv'));
 end
 
 % ---- diagnostics and the guardrail report --------------------------------
-diagnostics = vertcat(results.diagnostics);
+% Several models publish the same series over the same dates, so each row names
+% its model.
+blocks = arrayfun(@with_model, results, 'UniformOutput', false);
+diagnostics = vertcat(blocks{:});
 files{end+1} = write_csv(diagnostics, fullfile(cur, 'diagnostics.csv'));
 files{end+1} = write_csv(report.checks, fullfile(cur, 'guardrails.csv'));
 
@@ -182,6 +186,15 @@ for k = 1:numel(cols)
     v(loc(tf)) = cols{k}.summary.mean(tf);
     w.(names{k}) = v;
 end
+end
+
+
+function t = with_model(r)
+% One model's diagnostics with its name in a leading model column.
+t = r.diagnostics;
+if isempty(t) || width(t) == 0, t = table(); return, end
+t = addvars(t, repmat(string(r.model), height(t), 1), 'Before', 1, ...
+    'NewVariableNames', 'model');
 end
 
 

@@ -6,7 +6,7 @@ each time.
 ## The dates
 
 **A release follows BEA's advance estimate of GDP**, which completes a quarter about a month after
-it ends. Both inputs the five models read come from that release: real GDP and the PCE price
+it ends. Both inputs the six models read come from that release: real GDP and the PCE price
 index. A scheduled task on the release machine runs `tools\run_update.ps1 -IfNewData` every Monday;
 it asks FRED for the newest quarter complete in both series and releases when that quarter is
 newer than the published vintage, so a release follows the advance estimate within a week. The vintage is taken from the data, so a BEA release that
@@ -31,8 +31,8 @@ the sample end, so revisions to recent quarters cannot fail it.
 
 `PTR` is the input a release now waits for. It is the whole of `biuc_lrexp`'s expectations
 series rather than its early half, so when the Board has not refreshed the FRB/US package
-that model runs a quarter behind the other four. The release does not stall for it: the other
-four publish on time and `biuc_lrexp` catches up at the next vintage.
+that model runs a quarter behind the other five. The release does not stall for it: the other
+five publish on time and `biuc_lrexp` catches up at the next vintage.
 
 Exact agency dates are not tabulated here; BEA's release schedule has them.
 
@@ -96,8 +96,9 @@ likelihood off:
 
 About 41 minutes in series and 37 with two workers, so a quarterly run is not constrained by
 time. `biuc_lrexp` is almost all of it: its chain is 400,000 sweeps because shorter ones leave an
-effective sample below what G7 requires. All five are listed as measured in `model_lists`, which
-is what lets a scheduled run proceed without `AllowUnmeasured`.
+effective sample below what G7 requires. `uc_ma` was added after that run; on its own it takes
+0.7 minutes. All six are listed as measured in `model_lists`, which is what lets a scheduled run
+proceed without `AllowUnmeasured`.
 
 A model whose settings change needs re-measuring, because the figure that opened the schedule was
 taken at the old ones.

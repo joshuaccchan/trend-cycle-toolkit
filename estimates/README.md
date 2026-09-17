@@ -48,33 +48,24 @@ release that was refused.
 driver each setting comes from named beside it. Sample starts are settled: every model runs on
 all available data, so each start is the first quarter its inputs support.
 
-A model without a measured runtime does not go on the schedule. Measured 2026-09-11 on the
-release machine, at the settings above and so with the marginal likelihood off:
-
-| model | minutes |
-|---|---|
-| `ucsv_sw07` | 0.4 |
-| `ucur_break2` | 0.8 |
-| `uc_2m` | 0.9 |
-| `ar_trend_bound` | 1.1 |
-| `biuc_lrexp` | 3.4 |
-
-Six and a half minutes in series, four with two workers. `model_lists` in `run_release.m` is what
-actually opens the schedule, and it still lists none of them — that is a decision to take once
-G7 is settled, not a consequence of the timing.
+A model without a measured runtime does not go on the schedule. `model_lists` in `run_release.m`
+lists the measured models, and the table below gives each one's runtime at the settings in
+`preset.m`, with the marginal likelihood off.
 
 ## Chain Lengths
 
 Three models run longer chains than their published drivers, each because the effective sample at
 the published length falls below the 100 G7 requires: `ucsv_sw07` measured 61, `biuc_lrexp` 40 and
 `uc_2m` 40, on data running eleven years past the samples those papers used. Measured 2026-09-12
-at the settings in `preset.m`:
+at the settings in `preset.m`, and `uc_ma` on 2026-09-16 on the 2026Q2 inputs, where its smallest
+effective sample is 219:
 
 | model | nsim / burnin | published | stored | minutes |
 |---|---|---|---|---|
 | `ucsv_sw07` | 110,000 / 10,000 | 51,000 / 1,000 | 10,000 | 0.7 |
 | `ar_trend_bound` | 35,000 / 5,000 | as published | 3,000 | 0.9 |
 | `biuc_lrexp` | 400,000 / 40,000 | 31,000 / 1,000 | 36,000 | ~37 |
+| `uc_ma` | 11,000 / 1,000 | as published | 1,000 | 0.7 |
 | `uc_2m` | 430,000 / 30,000 | 110,000 / 10,000 | 40,000 | 3.3 |
 | `ucur_break2` | 110,000 / 10,000 | as published | 10,000 | 0.8 |
 

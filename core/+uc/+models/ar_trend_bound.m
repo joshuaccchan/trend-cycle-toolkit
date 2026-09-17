@@ -28,7 +28,7 @@ function out = ar_trend_bound(y, y0, opts)
 %   'Bounds'  [a b] on the trend               (default [0 5])
 %   'RhoBound' upper bound on rho              (default 1)
 %
-% From ARtrendbound.zip/ARtrend_bound.m. Lines that differ from it are marked [uc].
+% Lines that differ from the published code are marked [uc].
 %
 % The body assigns a variable named `uc`, which shadows the uc package for the
 % rest of the scope. This model calls no helper.

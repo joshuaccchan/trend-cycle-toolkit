@@ -42,15 +42,15 @@ end
 
 
 function testEveryModelCarriesASeedAndTheyDiffer(t)
-cfg = preset({'ucsv_sw07','ar_trend_bound','biuc_lrexp','uc_2m','ucur_break2'});
+cfg = preset({'ucsv_sw07','ar_trend_bound','biuc_lrexp','uc_ma','uc_2m','ucur_break2'});
 seeds = [cfg.seed];
 verifyTrue(t, all(isfinite(seeds)));
-verifyEqual(t, numel(unique(seeds)), 5, 'no two models may share a stream');
+verifyEqual(t, numel(unique(seeds)), 6, 'no two models may share a stream');
 end
 
 
 function testMarginalLikelihoodIsOffEverywhere(t)
-cfg = preset({'ucsv_sw07','ar_trend_bound','biuc_lrexp','uc_2m','ucur_break2'});
+cfg = preset({'ucsv_sw07','ar_trend_bound','biuc_lrexp','uc_ma','uc_2m','ucur_break2'});
 verifyFalse(t, any([cfg.compute_ml]));
 end
 
@@ -233,6 +233,25 @@ files = publish(r, rep, table(), struct([]), d, 'Vintage', '2026Q2', 'Promote', 
 verifyNotEmpty(t, files);
 verifyTrue(t, isfile(fullfile(d, 'current', 'trend_inflation.csv')));
 verifyTrue(t, isfile(fullfile(d, 'current', 'metadata.json')));
+end
+
+
+function testDiagnosticsNameTheirModel(t)
+% Two models over the same dates write rows that differ only in their model column.
+a = fake_result();
+b = fake_result();
+b.model = 'uc_ma';
+b.seed = 6;
+b.settings = preset('uc_ma');
+r = [a, b];
+rep = guardrails(r, struct([]), fake_data(), table(), 'Vintage', '2026Q2');
+d = tempname; mkdir(d);
+c = onCleanup(@() rmdir(d, 's'));
+publish(r, rep, table(), struct([]), d, 'Vintage', '2026Q2', 'Promote', false);
+diag = readtable(fullfile(d, 'current', 'diagnostics.csv'), 'TextType', 'string');
+verifyEqual(t, diag.Properties.VariableNames{1}, 'model');
+verifyEqual(t, sum(diag.model == "ucsv_sw07"), height(a.diagnostics));
+verifyEqual(t, sum(diag.model == "uc_ma"), height(b.diagnostics));
 end
 
 

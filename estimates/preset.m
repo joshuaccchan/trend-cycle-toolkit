@@ -17,14 +17,16 @@
 %   ucsv_sw07        110000   10000     1  1947Q2  DPCERD3Q086SBEA
 %   ar_trend_bound    35000    5000     2  1947Q2  DPCERD3Q086SBEA
 %   biuc_lrexp       400000   40000     3  1960Q1  DPCERD3Q086SBEA, PTR
+%   uc_ma             11000    1000     6  1947Q2  DPCERD3Q086SBEA
 %   uc_2m            430000   30000     4  1947Q1  GDPC1
 %   ucur_break2      110000   10000     5  1947Q1  GDPC1
 %
 % nsim is the TOTAL sweeps including burn-in, everywhere in this repository. thin
 % is 10 throughout, applied as draws are stored.
 %
-% WHERE EACH SETTING COMES FROM. ar_trend_bound and ucur_break2 run their published
-% drivers' own lengths, converted to a total. The other three are longer - published
+% WHERE EACH SETTING COMES FROM. ar_trend_bound, uc_ma and ucur_break2 run their
+% published drivers' own lengths, converted to a total where the driver counts burn-in
+% separately. The other three are longer - published
 % 51000/1000 for ucsv_sw07, 31000/1000 for biuc_lrexp and 110000/10000 for uc_2m -
 % because at those lengths, on data running eleven years past the papers' samples,
 % the effective sample falls below what guardrail G7 requires. estimates/README.md
@@ -38,7 +40,7 @@
 % Break dates are calendar quarters, never row indices. resolve_break_dates
 % converts them against the sample actually being estimated.
 %
-% compute_ml is false for all five and ml_reps carries the two output-gap drivers'
+% compute_ml is false for all six and ml_reps carries the two output-gap drivers'
 % published 50000 inert beside it, so a reader of a vintage can see the marginal
 % likelihood was not computed.
 %
@@ -71,7 +73,7 @@ for k = 1:numel(models)
     name = models{k};
     if ~isfield(known, name)
         error('uc:estimates:preset:unknownModel', ...
-            '"%s" is not one of the five models. They are: %s.', ...
+            '"%s" is not one of the six models. They are: %s.', ...
             name, strjoin(fieldnames(known)', ', '));
     end
     c = known.(name);
@@ -130,6 +132,12 @@ c.model = 'biuc_lrexp';      c.nsim = 400000; c.burnin = 40000; c.thin = 10;
 c.seed = 3;  c.sample_start = '1960Q1';  c.inputs = {'DPCERD3Q086SBEA', 'PTR'};
 c.cites = 'trend_IE_code.zip/M1.m (chain length is this repository''s)';
 known.biuc_lrexp = c;
+
+c = blank();
+c.model = 'uc_ma';           c.nsim = 11000;  c.burnin = 1000;  c.thin = 10;
+c.seed = 6;  c.sample_start = '1947Q2';  c.inputs = {'DPCERD3Q086SBEA'};
+c.cites = 'MASV_matlab.zip/UC_MA.m';
+known.uc_ma = c;
 
 c = blank();
 c.model = 'uc_2m';           c.nsim = 430000; c.burnin = 30000; c.thin = 10;

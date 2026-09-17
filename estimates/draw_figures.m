@@ -11,9 +11,10 @@
 % that were published, and a figure can be redrawn from any vintage without
 % re-estimating anything.
 %
-% A model keeps the same color in every figure it appears in, and the colors are
-% assigned in a fixed order that passes the colorblind-separation checks for three
-% series drawn over each other.
+% A model keeps its color in every figure and every vintage: the color is fixed by
+% its place in the model list below, whichever models a CSV holds. The colors are
+% the first four slots of the reference categorical palette, in its fixed order,
+% which pass its colorblind and normal-vision separation checks for line charts.
 
 function files = draw_figures(csvdir, vintage, outdir)
 
@@ -27,7 +28,7 @@ if ~isfolder(outdir), mkdir(outdir); end
 
 SERIES = {
     'trend_inflation', 'Trend inflation, PCE', 'per cent, annualized', ...
-        {'ucsv_sw07', 'ar_trend_bound', 'biuc_lrexp'}
+        {'ucsv_sw07', 'ar_trend_bound', 'biuc_lrexp', 'uc_ma'}
     'output_gap',      'Output gap',           'per cent of trend output', ...
         {'uc_2m', 'ucur_break2'}
     'trend_growth',    'Trend output growth',  'per cent, annualized', ...
@@ -35,12 +36,12 @@ SERIES = {
     };
 
 NAMES = containers.Map( ...
-    {'ucsv_sw07', 'ar_trend_bound', 'biuc_lrexp', 'uc_2m', 'ucur_break2'}, ...
+    {'ucsv_sw07', 'ar_trend_bound', 'biuc_lrexp', 'uc_ma', 'uc_2m', 'ucur_break2'}, ...
     {'Stock and Watson (2007)', 'Chan, Koop and Potter (2013)', ...
-     'Chan, Clark and Koop (2018)', 'Grant and Chan (2017, JEDC)', ...
+     'Chan, Clark and Koop (2018)', 'Chan (2013)', 'Grant and Chan (2017, JEDC)', ...
      'Grant and Chan (2017, JMCB)'});
 
-COLORS = hex2rgb({'#2a78d6', '#eb6834', '#1baf7a'});
+COLORS = hex2rgb({'#2a78d6', '#eb6834', '#1baf7a', '#eda100'});
 INK = hex2rgb({'#0b0b0b'});   SECONDARY = hex2rgb({'#52514e'});
 MUTED = hex2rgb({'#898781'}); GRID = hex2rgb({'#e1e0d9'});
 BASELINE = hex2rgb({'#c3c2b7'});
@@ -54,7 +55,8 @@ for s = 1:size(SERIES, 1)
     if ~isdatetime(t.date), t.date = datetime(t.date); end
 
     order = SERIES{s, 4};
-    order = order(ismember(order, unique(t.model)));
+    slot = find(ismember(order, unique(t.model)));
+    order = order(slot);
     if isempty(order), continue, end
 
     fig = figure('Visible', 'off', 'Color', 'w', 'Position', [100 100 960 480]);
@@ -63,14 +65,14 @@ for s = 1:size(SERIES, 1)
     % Bands first, so no line is drawn under another model's band.
     for k = 1:numel(order)
         [d, ~, lo, hi] = series_of(t, order{k});
-        fill(ax, [d; flipud(d)], [lo; flipud(hi)], COLORS(k, :), ...
+        fill(ax, [d; flipud(d)], [lo; flipud(hi)], COLORS(slot(k), :), ...
             'FaceAlpha', 0.12, 'EdgeColor', 'none', 'HandleVisibility', 'off');
     end
     yline(ax, 0, '-', 'Color', BASELINE, 'LineWidth', 0.75, 'HandleVisibility', 'off');
     h = gobjects(numel(order), 1);
     for k = 1:numel(order)
         [d, m] = series_of(t, order{k});
-        h(k) = plot(ax, d, m, 'Color', COLORS(k, :), 'LineWidth', 1.25, ...
+        h(k) = plot(ax, d, m, 'Color', COLORS(slot(k), :), 'LineWidth', 1.25, ...
             'DisplayName', NAMES(order{k}));
     end
 

@@ -1,7 +1,7 @@
 # trend-cycle-toolkit
 
 Bayesian unobserved components models for US trend inflation, the output gap and trend output
-growth, by [Joshua Chan](https://joshuachan.org). Three series from five models, re-estimated
+growth, by [Joshua Chan](https://joshuachan.org). Three series from six models, re-estimated
 every quarter from public data.
 
 ## Status
@@ -10,18 +10,20 @@ The current vintage is **2026Q2**, released 2026-09-12 and tagged `v2026Q2`. It 
 onward, except `biuc_lrexp`, which begins in 1960Q2 and ends where FRB/US `PTR` ends. Every check
 in `estimates/guardrails.m` passed; a release is promoted only when they all do.
 
+`uc_ma` joins with the 2026Q3 release, so the 2026Q2 files hold the other five models.
+
 Each model reproduces the published driver it was taken from, draw for draw.
 
 ## The Three Series
 
 | Series | Written to | Produced by |
 |---|---|---|
-| Trend inflation | `estimates/current/trend_inflation.csv` | `ucsv_sw07`, `ar_trend_bound`, `biuc_lrexp` |
+| Trend inflation | `estimates/current/trend_inflation.csv` | `ucsv_sw07`, `ar_trend_bound`, `biuc_lrexp`, `uc_ma` |
 | Output gap | `estimates/current/output_gap.csv` | `uc_2m`, `ucur_break2` |
 | Trend output growth | `estimates/current/trend_growth.csv` | `uc_2m`, from the same draws as its gap |
 
 Each release also writes `diagnostics.csv`, holding inefficiency factors, Monte Carlo standard
-errors for every published parameter and date, with Geweke statistics on the scalar parameters
+errors for every model's published parameters and dates, with Geweke statistics on the scalar parameters
 and selected dates; `trend_cycle_estimates.xlsx`, holding
 the same three series in one workbook; and `metadata.json`, recording the vintage, the git SHA,
 the seed and settings of each model, and the URL, fetch time and SHA-256 of every input. The
@@ -32,25 +34,26 @@ Every release is frozen under `estimates/vintages/YYYYQq/` and tagged, so a pape
 fixed vintage. A frozen vintage carries the source data it was estimated on, so the SHA-256 values
 in its `metadata.json` refer to files beside them.
 
-## The Five Models
+## The Six Models
 
 | Model | Series | Method source | Data | Sample |
 |---|---|---|---|---|
 | `uc.models.ucsv_sw07` | Trend inflation | Stock and Watson (2007, JMCB 39(s1): 3–33) | `DPCERD3Q086SBEA` | 1947Q2– |
 | `uc.models.ar_trend_bound` | Trend inflation | Chan, Koop and Potter (2013, JBES 31(1): 94–106) | `DPCERD3Q086SBEA` | 1947Q2– |
 | `uc.models.biuc_lrexp` | Trend inflation | Chan, Clark and Koop (2018, JMCB 50(1): 5–53) | `DPCERD3Q086SBEA` + `PTR` | 1960Q2– |
+| `uc.models.uc_ma` | Trend inflation | Chan (2013, JoE 176(2): 162–172) | `DPCERD3Q086SBEA` | 1947Q2– |
 | `uc.models.uc_2m` | Output gap **and** trend growth | Grant and Chan (2017, JEDC 75: 114–121) | `GDPC1` | 1947Q1– |
 | `uc.models.ucur_break2` | Output gap | Grant and Chan (2017, JMCB 49(2-3): 525–552) | `GDPC1` | 1947Q1– |
 
-The four Chan papers have replication packages at
+The five Chan papers have replication packages at
 [joshuachan.org/code.html](https://joshuachan.org/code.html): `ARtrendbound.zip`,
-`trend_IE_code.zip`, `output_gap_2M_code.zip` and `output_gap_code.zip`. `ucsv_sw07` follows
-`chapter10/UCSV.m` in the book repository,
+`trend_IE_code.zip`, `MASV_matlab.zip`, `output_gap_2M_code.zip` and `output_gap_code.zip`.
+`ucsv_sw07` follows `chapter10/UCSV.m` in the book repository,
 [bayesian-macroeconometrics](https://github.com/joshuaccchan/bayesian-macroeconometrics).
 
 **Trend inflation here is PCE inflation.** `biuc_lrexp` pairs inflation with FRB/US `PTR`, which
 is published in PCE terms, and that is the combination reaching back to 1960 that Chan, Clark and
-Koop report and that their `M1.m` reads. The other two models follow PCE so the three columns
+Koop report and that their `M1.m` reads. The other three models follow PCE so the four columns
 share one price index.
 
 Every model runs on all available data. Each sample begins at the first quarter its inputs
@@ -59,6 +62,11 @@ in 1968Q1, `uc.data.build_ptr` holds it flat over the 32 quarters back to 1960Q1
 package does, and the first quarter is the presample observation the model takes. It also ends
 where `PTR` ends, so when the Board has not refreshed the FRB/US package that column runs a
 quarter behind the others.
+
+`uc_ma` has a random-walk trend with a constant variance and MA(1) transitory errors with
+stochastic volatility. In Chan (2013) the MA(1) term makes the trend much smoother than in the same
+model without it. Its trend is also far smoother than that of `ucsv_sw07`, whose trend variance is
+itself stochastic.
 
 `uc_2m` puts a second-order Markov process on the trend, the trend the Hodrick-Prescott filter
 implies, and lets the cycle be serially correlated, which the filter does not allow; its implied
@@ -71,7 +79,7 @@ same series, so the distance between their gap estimates is what the specificati
 These are re-implementations. Each takes its data and settings as arguments where the published
 driver hard-coded them, seeds from `rng(seed,'threefry')` where the driver seeded from the clock,
 and drops the plotting and the marginal-likelihood step. Nothing in the samplers themselves is
-touched, and each file names the package it came from.
+touched, and lines that differ from the published driver are marked `[uc]`.
 
 Three models run longer chains than their published drivers, because on current data the
 published lengths leave too small an effective sample. `estimates/preset.m` carries the lengths
@@ -94,10 +102,10 @@ requires, and the revision policy.
 core/+uc/          the library
   +data            fetchers, the PTR backfill, alignment and transforms, the
                    incomplete-quarter guard, the vintage stamp
-  +models          the five models
-  +sv              ksc_rw_h0, ksc_rw_h0_Vh, rw_gaussian_approx
+  +models          the six models
+  +sv              ksc_rw_h0, ksc_rw_h0_Vh, ksc_ar1, rw_gaussian_approx
   +diag            inefficiency factors, MCSE, Geweke Z
-  +util            surform, build_hpsi, llike_maq
+  +util            surform, build_hpsi, llike_maq, nllike_ma1_sv, sample_psi
 estimates/         the release pipeline — see estimates/README.md
 run_release.m      the driver
 tools/             run_update.ps1, the scheduled entry point
@@ -115,10 +123,10 @@ rather than in CI.
 ## Requirements
 
 MATLAB R2020a or later, for `exportgraphics` in the publication step. The Statistics and Machine
-Learning Toolbox is needed by the three trend inflation models and by both samplers in `uc.sv`,
+Learning Toolbox is needed by the four trend inflation models and by the samplers in `uc.sv`,
 which call `gamrnd`, `normcdf` and `normpdf`; the two output-gap models run on base MATLAB. The
-Optimization Toolbox is needed by `biuc_lrexp`, whose psi block runs `fminsearch` and then
-`fminunc`; a release without it contains two of the three trend inflation columns. Parallel
+Optimization Toolbox is needed by `biuc_lrexp` and `uc_ma`, whose psi steps run `fminsearch` and
+then `fminunc`; a release without it contains two of the four trend inflation columns. Parallel
 Computing is optional and shortens a release run. `setup.m` checks all three and reports which
 models a missing toolbox removes from the release.
 
@@ -147,8 +155,6 @@ PDF files under `estimates/current/`, `estimates/vintages/`, `estimates/revision
 `estimates/figures/`. Use them anywhere, including commercially, with attribution: cite this
 repository, the vintage you took the numbers from, and the paper behind the series you use.
 
-Four of the five models are joint work — with Gary Koop and Simon M. Potter, with Todd E. Clark
-and Gary Koop, and two with Angelia L. Grant — and the fifth is by James H. Stock and Mark W.
-Watson. Cite the paper whose model you use. Where a function body in `core/+uc/` derives from a
-published package, that file's header names the package and the file it came from. Those packages
-are at [joshuachan.org/code.html](https://joshuachan.org/code.html).
+Four of the six models are joint work — with Gary Koop and Simon M. Potter, with Todd E. Clark
+and Gary Koop, and two with Angelia L. Grant — one is Joshua Chan's alone, and one is by James H.
+Stock and Mark W. Watson. Cite the paper whose model you use.

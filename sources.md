@@ -9,7 +9,7 @@ The fetchers are in `core/+uc/+data/`. Every endpoint below was verified live on
 
 | Series | Source | Endpoint | Transform | Used by |
 |---|---|---|---|---|
-| `DPCERD3Q086SBEA` — PCE chain-type price index | FRED (BEA) | `fredgraph.csv?id=DPCERD3Q086SBEA&fq=Quarterly` — natively quarterly | `400*log` difference, giving annualized percent | the three trend inflation models |
+| `DPCERD3Q086SBEA` — PCE chain-type price index | FRED (BEA) | `fredgraph.csv?id=DPCERD3Q086SBEA&fq=Quarterly` — natively quarterly | `400*log` difference, giving annualized percent | the four trend inflation models |
 | `GDPC1` — real GDP, chained dollars | FRED (BEA) | `fredgraph.csv?id=GDPC1` — natively quarterly | `100*log` of the level | `uc_2m`, `ucur_break2` |
 | `PTR` — FRB/US 10-year expected PCE inflation | Federal Reserve Board | `federalreserve.gov/econres/files/data_only_package.zip`, `HISTDATA.TXT` | flat backfill over 1960Q1–1967Q4 | `biuc_lrexp` |
 
@@ -34,7 +34,7 @@ No wedge and no splice: `PTR` and the inflation series are both in PCE terms.
 
 `PTR` sets `biuc_lrexp`'s sample end. It is the whole expectations series, so a release runs that
 model only as far as the last quarter in the FRB/US package, and when the Board has not refreshed
-it that model ends a quarter behind the other four.
+it that model ends a quarter behind the other five.
 
 ## Fetch traps
 

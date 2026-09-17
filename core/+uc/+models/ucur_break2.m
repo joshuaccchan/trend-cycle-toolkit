@@ -6,10 +6,9 @@ function out = ucur_break2(y, breaks, opts)
 %
 % The two-break model of Grant and Chan (2017), "A Bayesian Model Comparison for
 % Trend-Cycle Decompositions of Output", Journal of Money, Credit and Banking,
-% 49(2-3), 525-552 - model 6 of the eight that package compares. The trend and
-% cycle innovations are correlated, and trend output growth takes a different
-% constant value in each of the three regimes the breaks define, so its trend
-% growth is a step function where uc_2m's varies smoothly.
+% 49(2-3), 525-552. The trend and cycle innovations are correlated, and trend output
+% growth takes a different constant value in each of the three regimes the breaks
+% define, so its trend growth is a step function where uc_2m's varies smoothly.
 %
 % y is 100*log of real output. breaks is a two-element vector of ROW INDICES into
 % y, in increasing order, which is what the sampler needs; resolve them from
@@ -22,9 +21,7 @@ function out = ucur_break2(y, breaks, opts)
 %   'Thin'    keep every Thin-th retained draw (default 10)
 %   'Seed'    rng seed                         (default 1)
 %
-% As in uc_2m, this package's own nsims is the RETAINED count.
-%
-% From output_gap_code.zip/UCUR_break2.m.
+% Lines that differ from the published code are marked [uc].
 %
 % The body assigns a variable named `uc`, which shadows the uc package for the
 % rest of the scope. This model calls no helper.

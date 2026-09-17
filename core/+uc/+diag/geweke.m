@@ -16,11 +16,8 @@
 % weakly dependent data: on a 40,000-draw chain it picks 9 lags, so a chain with an
 % integration time in the hundreds has its long-run variance understated and every
 % |Z| inflated. Pass an explicit lag.
-%
-% From chapter06/geweke_diag.m in joshuaccchan/bayesian-macroeconometrics.
 
 function [Z, pval, info] = geweke(draws, a, b, Lrule)
-% geweke_diag.m
 % Computes Geweke's convergence diagnostic for MCMC output. For each
 % column of draws, the chain is split into an early segment A (first
 % fraction a) and a late segment B (last fraction 1-b), the segment

@@ -28,7 +28,7 @@
   before today. Ignored with -IfNewData, which takes it from the data.
 
 .PARAMETER Models
-  Comma-separated model names. Default: all five.
+  Comma-separated model names. Default: all six.
 
 .PARAMETER DryRun
   Estimate, check and stage, but promote nothing and commit nothing.

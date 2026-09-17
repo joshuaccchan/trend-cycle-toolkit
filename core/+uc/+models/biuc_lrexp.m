@@ -17,8 +17,7 @@ function out = biuc_lrexp(infl, expect, opts)
 % observation of each is a presample value, so the estimation sample is one
 % quarter shorter than the input.
 %
-% Requires the Optimization Toolbox, for the fminunc in the psi block. It is the
-% only one of the five models that does.
+% Requires the Optimization Toolbox, for the fminunc in the psi block.
 %
 % OPTIONS
 %   'NSim'    TOTAL sweeps, burn-in included   (default 31000)
@@ -27,7 +26,7 @@ function out = biuc_lrexp(infl, expect, opts)
 %   'Seed'    rng seed                         (default 1)
 %   'Q'       MA order of the inflation error  (default 1)
 %
-% From trend_IE_code.zip/M1.m.
+% Lines that differ from the published code are marked [uc].
 %
 % The body uses pi as a variable name, which shadows MATLAB's built-in pi for the
 % rest of the scope. Nothing here reads the constant.
@@ -67,8 +66,7 @@ if T < 20
 end
 if isempty(ver('optim'))
     error('uc:models:noOptim', ...
-        ['this model needs the Optimization Toolbox: its psi block calls fminunc. ' ...
-         'It is the only one of the five that does.']);
+        'this model needs the Optimization Toolbox: its psi block calls fminunc.');
 end
 
 rng(opts.Seed, 'threefry');
@@ -160,7 +158,7 @@ for isim = 1:nsim + burnin
     
         % sample psi    
     fpsi = @(x) -uc.util.llike_maq(x,z-Xd*d,sigw2) - lpsipri(x);
-    [psi,flag,psihat,invDpsic] = sample_psi(psi,fpsi,isim,invDpsic,options);
+    [psi,flag,psihat,invDpsic] = uc.util.sample_psi(psi,fpsi,isim,invDpsic,options);
     Hpsi = uc.util.build_hpsi(psi,T);    
     countpsi = countpsi + flag; 
     
@@ -270,9 +268,8 @@ out.ndraws   = numel(keep);
 end
 
 % ===========================================================================
-% Local functions, lifted verbatim from sample_b.m, sample_psi.m and
-% sample_sig2.m in trend_IE_code.zip. They are local so that their generic
-% names cannot collide with anything else.
+% Local functions. They are local so that their generic names cannot collide
+% with anything else.
 % ===========================================================================
 
 function [b,accept] = sample_b(b,pi,pistar,lamv,pi0,Vb,sigb2)
@@ -324,32 +321,6 @@ if flag == 1
         b = bc;
         accept = 1;
     end
-end
-
-end
-function [psi,flag,psihat,invDpsic] = sample_psi(psi,fpsi,loop,invDpsic,options)
-q = length(psi);
-psihat = fminsearch(fpsi,psi);
-Cpsi = chol(invDpsic,'lower');
-if (mod(loop,100)==0) || loop == 1 %% get the Hessian every 100 iterations
-    [psihat,fval,exitflag,output,grad,hess] = fminunc(fpsi,psihat,options); 
-    [tmpCpsi,p] = chol(hess,'lower');
-    if p == 0
-        invDpsic = hess;
-        Cpsi = tmpCpsi;
-    end        
-end
-psic = psihat + Cpsi'\randn(q,1); 
-if sum(abs(1./roots([flipud(psic);1]))<.99) == q
-    alpMH = -fpsi(psic) + fpsi(psi) ...
-        - .5*(psi-psihat)'*invDpsic*(psi-psihat) ...
-        + .5*(psic-psihat)'*invDpsic*(psic-psihat);
-else
-    alpMH = -inf;
-end
-flag = alpMH>log(rand);
-if flag
-    psi = psic;
 end
 
 end

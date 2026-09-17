@@ -97,8 +97,7 @@ jobs:
             Optimization_Toolbox
 
       # Statistics is needed by nearly every sampler; Optimization by the psi
-      # block of the long-run-expectations model, which runs fminsearch and
-      # fminunc. The Parallel Computing Toolbox is deliberately NOT requested:
+      # steps of biuc_lrexp and uc_ma, which run fminsearch and fminunc. The Parallel Computing Toolbox is deliberately NOT requested:
       # the release run uses parfor across models on a four-core machine, the
       # tests do not, and a two-core runner would gain nothing from a pool.
       #

@@ -22,11 +22,7 @@ function out = uc_2m(y, opts)
 %   'Thin'    keep every Thin-th retained draw (default 10)
 %   'Seed'    rng seed                         (default 1)
 %
-% NSim is the TOTAL everywhere in this repository. The published drivers do not
-% agree on that: this package's nsims = 100000 is the RETAINED count and it loops
-% 1:nsims+burnin, while ARtrend_bound.m's nloop = 35000 is the total.
-%
-% From output_gap_2M_code.zip/UCUR_2M.m.
+% Lines that differ from the published code are marked [uc].
 %
 % The 50000 draws in the prior block estimate phi_const, the mass of the
 % stationarity region, which only the marginal likelihood reads. They are kept

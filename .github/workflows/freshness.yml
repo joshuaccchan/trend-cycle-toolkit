@@ -3,7 +3,7 @@
 # number that gets published.
 #
 # Every Monday it fetches the two FRED series the published models consume -
-# DPCERD3Q086SBEA, the PCE price index the three trend inflation models read,
+# DPCERD3Q086SBEA, the PCE price index the four trend inflation models read,
 # and GDPC1, which the two output-gap models read - works out the newest quarter
 # complete in both, compares that against the vintage recorded in
 # estimates/current/metadata.json, and opens or updates one issue when the
@@ -101,8 +101,8 @@ jobs:
 
           UA = "trend-cycle-toolkit freshness watchdog (https://github.com/joshuaccchan/trend-cycle-toolkit)"
 
-          # The series the five published models consume: the PCE price index for
-          # the three trend inflation models, GDPC1 for the two output-gap models.
+          # The series the six published models consume: the PCE price index for
+          # the four trend inflation models, GDPC1 for the two output-gap models.
           # Nothing else is watched, because a series no model reads cannot leave
           # the estimates behind the data. Both come from BEA's GDP release, so
           # they normally complete a quarter on the same day. Unauthenticated -

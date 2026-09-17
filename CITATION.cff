@@ -4,7 +4,7 @@ message: >-
   If you use the published series, cite this software record and the vintage you
   took the numbers from — the vintage stamp is in
   estimates/current/metadata.json and in the release tag. If you use one of the
-  models, cite the paper whose method it implements: the five references below,
+  models, cite the paper whose method it implements: the six references below,
   mapped to models in README.md.
 type: software
 authors:
@@ -16,8 +16,8 @@ repository-code: "https://github.com/joshuaccchan/trend-cycle-toolkit"
 abstract: >-
   Three US macroeconomic series — trend inflation, the output gap and trend
   output growth — estimated from Bayesian unobserved components models and
-  re-estimated four times a year on current public data. Five models produce
-  them: three trend inflation specifications, an unobserved components model
+  re-estimated four times a year on current public data. Six models produce
+  them: four trend inflation specifications, an unobserved components model
   with a second-order Markov trend that yields both an output gap and
   annualized trend output growth, and an unobserved components model with
   correlated trend and cycle errors and two breaks in trend output growth. The
@@ -26,8 +26,7 @@ abstract: >-
   diagnostics as one tested set of functions. Every release writes the series,
   their credible bands and their diagnostics as CSV and freezes a copy of the
   whole release, so that revisions can be read off the record. Inputs come from
-  FRED, the Philadelphia Fed's Survey of Professional Forecasters and the
-  Federal Reserve Board's FRB/US package.
+  FRED and the Federal Reserve Board's FRB/US package.
 keywords:
   - trend inflation
   - output gap
@@ -44,7 +43,7 @@ keywords:
 license:
   - MIT
   - CC-BY-4.0
-# The five method sources — the papers whose models are implemented here — plus
+# The six method sources — the papers whose models are implemented here — plus
 # the companion repository. Each notes field names the model it corresponds to
 # and the published package that implements the method, where one exists.
 references:
@@ -94,6 +93,18 @@ references:
     start: 5
     end: 53
     notes: "Method source for uc.models.biuc_lrexp, which produces a trend inflation series from inflation together with long-run inflation expectations. The published package that implements it is trend_IE_code.zip at https://joshuachan.org/code.html. Cite the journal version rather than the 2015 Cleveland Fed working paper."
+  - type: article
+    title: "Moving Average Stochastic Volatility Models with Application to Inflation Forecast"
+    authors:
+      - family-names: Chan
+        given-names: Joshua C. C.
+    journal: "Journal of Econometrics"
+    year: 2013
+    volume: 176
+    issue: 2
+    start: 162
+    end: 172
+    notes: "Method source for uc.models.uc_ma, the UC-MA model, which produces a trend inflation series. The published package that implements it is MASV_matlab.zip at https://joshuachan.org/code.html."
   - type: article
     title: "Reconciling Output Gaps: Unobserved Components Model and Hodrick-Prescott Filter"
     authors:

@@ -9,11 +9,8 @@
 %
 % A deterministic optimization: it draws nothing, so moving the call does not shift
 % the random stream.
-%
-% From chapter10/SV_RW_gaussian_approx.m in joshuaccchan/bayesian-macroeconometrics.
 
 function h_hat = rw_gaussian_approx(s2,h0,sigh2)
-% SV_RW_gaussian_approx.m
 % Posterior mean of the log-volatility vector h under a single-Gaussian
 % (moment-matching) approximation to log(chi^2_1) and a random-walk prior for
 % h_t. The transformed observation y*_t = log(y_t^2 + c) is treated as

@@ -37,7 +37,7 @@
 %
 % ALIGNMENT IS PER MODEL, over that model's own inputs. uc.data.align_by_date
 % intersects what it is given, so aligning all three series at once would start
-% every model where PTR does and throw away thirteen years from the four that never
+% every model where PTR does and throw away thirteen years from the five that never
 % read it. Models can also end at different quarters.
 %
 % THE PRESAMPLE QUARTER. ar_trend_bound and biuc_lrexp each spend their first
@@ -157,6 +157,12 @@ switch c.model
                                    'Thin', c.thin, 'Seed', c.seed);
         pub = pack('trend_inflation', out.pistar, wdates(2:end));
 
+    case 'uc_ma'
+        y   = s.infl;
+        out = uc.models.uc_ma(y, 'NSim', c.nsim, 'Burnin', c.burnin, ...
+                              'Thin', c.thin, 'Seed', c.seed);
+        pub = pack('trend_inflation', out.tau, wdates);
+
     case 'uc_2m'
         y   = s.lgdp;
         out = uc.models.uc_2m(y, 'NSim', c.nsim, 'Burnin', c.burnin, ...
@@ -210,7 +216,7 @@ end
 function f = needs(model)
 % The model-ready fields each model reads.
 switch model
-    case {'ucsv_sw07', 'ar_trend_bound'}, f = {'infl'};
+    case {'ucsv_sw07', 'ar_trend_bound', 'uc_ma'}, f = {'infl'};
     case 'biuc_lrexp',                    f = {'infl', 'ptr'};
     case {'uc_2m', 'ucur_break2'},        f = {'lgdp'};
     otherwise, f = {};

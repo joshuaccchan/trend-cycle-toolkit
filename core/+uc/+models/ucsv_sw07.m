@@ -26,7 +26,7 @@ function out = ucsv_sw07(y, opts)
 %   'Thin'    keep every Thin-th retained draw (default 10)
 %   'Seed'    rng seed                         (default 1)
 %
-% From chapter10/UCSV.m in joshuaccchan/bayesian-macroeconometrics.
+% Lines that differ from the published code are marked [uc].
 
 arguments
     y (:,1) double

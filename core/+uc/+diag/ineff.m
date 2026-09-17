@@ -6,11 +6,8 @@
 % variance to its marginal variance, so IF = 10 means ten correlated draws carry
 % the information of one independent draw. A column's effective sample size is
 % its draw count divided by its IF.
-%
-% From chapter06/inefficiency_factor.m in joshuaccchan/bayesian-macroeconometrics.
 
 function IF = ineff(draws, L)
-% inefficiency_factor.m
 % Computes inefficiency factors (integrated autocorrelation times) for
 % MCMC output. For each column of draws, IF(j) = Omega_j / sigma2_j,
 % where sigma2_j is the marginal variance and Omega_j is the long-run

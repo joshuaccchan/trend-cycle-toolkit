@@ -8,8 +8,8 @@ function tbl = annualized_log_diff(tbl)
 %
 %   value_t = 400 * log( level_t / level_{t-1} )
 %
-% The first row has no predecessor and is dropped, which is why the three trend
-% inflation models start at 1947Q2 while DPCERD3Q086SBEA begins at 1947Q1.
+% The first row has no predecessor and is dropped, which is why PCE inflation starts
+% at 1947Q2 while DPCERD3Q086SBEA begins at 1947Q1.
 %
 % The factor is 4 for annualization and 100 for percent. Annualized percentage
 % points are the units the published models are written against - ar_trend_bound

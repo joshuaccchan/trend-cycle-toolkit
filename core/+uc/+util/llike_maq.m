@@ -1,11 +1,6 @@
 % uc.util.llike_maq - log likelihood of an MA(q) error model given psi.
 %
 %   lden = uc.util.llike_maq(psi, y, sig2)
-%
-% The objective the psi block of uc.models.biuc_lrexp maximizes before its
-% accept-reject step.
-%
-% From llike_MAq.m in trend_IE_code.zip.
 
 function lden = llike_maq(psi,y,sig2)
 T = length(y);

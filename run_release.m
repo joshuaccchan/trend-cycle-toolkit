@@ -37,9 +37,9 @@
 %                       has not published fails a named check.
 %   'Models'            cellstr of uc.models names, or one comma-separated string,
 %                       which is the only shape a workflow_dispatch input carries.
-%                       Empty means all five.
+%                       Empty means all six.
 %   'AllowUnmeasured'   run a model whose runtime has not been measured (default
-%                       false), which is all five today.
+%                       false).
 %   'RunTests'          run the local unit suite first (default true).
 %   'DryRun'            do everything except promote (default false).
 %   'Mode'              'local' (default) or 'cloud-backup'. The latter estimates
@@ -99,8 +99,8 @@ fprintf('run_release: vintage %s, %d model(s), %s mode\n', ...
 % it were quarterly is a mistake that nothing downstream can see.
 % core/+uc/+data/README.md records the endpoint it becomes, fq=Quarterly&fam=avg.
 %
-% Three series are fetched, because the five models read three inputs between
-% them: PCE inflation for the three trend inflation models, GDPC1 for the two
+% Three series are fetched, because the six models read three inputs between
+% them: PCE inflation for the four trend inflation models, GDPC1 for the two
 % output-gap models, and FRB/US PTR, the long-run expectation biuc_lrexp adds to
 % its inflation data. Nothing else is fetched. A series no scheduled model reads
 % would be archived every quarter, hashed, and never used.
@@ -137,7 +137,7 @@ manifest = uc.data.vintage_stamp(src, stagedir, vintage);
 % The three series are NOT put on a common axis here. uc.data.align_by_date
 % intersects what it is given, and the backfilled PTR begins in 1960Q1 while the
 % price index and GDPC1 begin in 1947 - aligning all three at once would start
-% every model in 1960 and throw away thirteen years from the four that never read
+% every model in 1960 and throw away thirteen years from the five that never read
 % PTR.
 % run_estimates aligns each model over its own inputs instead, and asserts the
 % sample start preset.m records for it.
@@ -380,7 +380,7 @@ function [product, measured] = model_lists()
 % model_lists - the two lists of model names, in one place because they are two
 % different statements and are read from two different functions.
 %
-% product   the five models that produce the three published series, and the
+% product   the six models that produce the three published series, and the
 %           default model list, because a release estimates the whole product
 %           and not a subset of it.
 % measured  the models whose runtime has been measured as this repository runs
@@ -394,11 +394,13 @@ function [product, measured] = model_lists()
 %   ucsv_sw07 0.7, ucur_break2 0.7, ar_trend_bound 1.0, uc_2m 3.1,
 %   biuc_lrexp 37.4 minutes; 38.7 wall clock with two workers.
 %
+% uc_ma was added after that run and measured alone on 2026-09-16: 0.7 minutes.
+%
 % A model whose settings change needs re-measuring, because the figure that
 % opened the schedule was taken at the old ones.
 
-product  = {'ucsv_sw07', 'ar_trend_bound', 'biuc_lrexp', 'uc_2m', 'ucur_break2'};
-measured = {'ucsv_sw07', 'ar_trend_bound', 'biuc_lrexp', 'uc_2m', 'ucur_break2'};
+product  = {'ucsv_sw07', 'ar_trend_bound', 'biuc_lrexp', 'uc_ma', 'uc_2m', 'ucur_break2'};
+measured = {'ucsv_sw07', 'ar_trend_bound', 'biuc_lrexp', 'uc_ma', 'uc_2m', 'ucur_break2'};
 end
 
 

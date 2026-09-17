@@ -6,11 +6,8 @@
 % package is built on. x is a draw sequence, L the truncation lag, and S the
 % long-run variance of mean(x), so sqrt(S) is that mean's Monte Carlo standard
 % error.
-%
-% From chapter06/specvar0.m in joshuaccchan/bayesian-macroeconometrics.
 
 function S = specvar0(x, L)
-% specvar0.m
 % Estimates the long-run variance of the sample mean of x using a
 % Bartlett-window spectral-variance estimator at frequency zero:
 %       S = (gamma_0 + 2 * sum_{ell=1}^{L} w_ell * gamma_ell) / T,
