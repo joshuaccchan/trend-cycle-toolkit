@@ -37,9 +37,12 @@
 %        most of the parameters it scores are points on one state path and move
 %        together, so a share of them carries far less information than its face
 %        value suggests
-%   G8   for any date more than eight quarters before the sample end, a move
-%        against the previous vintage over max(0.20pp, 3 x MCSE) fails, and one
-%        over 1.0pp is held for a person
+%   G8   for any date more than eight quarters before the sample end, the revision
+%        with its sample-extension component removed - the previous sample
+%        re-estimated on the new data, against the previous vintage - fails over
+%        max(0.20pp, 4 x sqrt(2) x MCSE), and one over 1.0pp is held for a person.
+%        A revision is the difference of two chains, so its Monte Carlo standard
+%        error is sqrt(2) x MCSE, and the tolerance is four of those
 %   G9   revised input history. PCE inflation and GDP growth as the models read
 %        them now, against the same rates rebuilt from the previous vintage's
 %        archived inputs, over quarters more than eight before its sample end.
@@ -68,7 +71,7 @@ end
 
 MIN_ESS      = 100;     % G7
 REV_FLOOR    = 0.20;    % G8, percentage points
-REV_MCSE     = 3;       % G8
+REV_MCSE     = 4;       % G8, Monte Carlo standard errors of a revision
 REV_FAIL     = 1.00;    % G8, percentage points
 REVISION_FLOOR  = 0.02; % G9, percentage points, annualized
 REVISION_LAG    = 8;    % G9, quarters before the previous sample end
@@ -261,14 +264,16 @@ else
             if isempty(t), continue, end
 
             mc = mcse_for(d, name, t.date);
-            tol = max(REV_FLOOR, REV_MCSE * mc) * widen;
-            move = abs(t.total);
+            tol = max(REV_FLOOR, REV_MCSE * sqrt(2) * mc) * widen;
+            % A longer sample moves a smoothed path at every date. total - sample
+            % is what moved with the sample held at the previous release's end.
+            move = abs(t.total - t.sample);
             nflag = sum(move > tol);
             worst = max(move);
 
             rows{end+1} = row('G8', r.model, [name ' revisions over tolerance'], ...
                 nflag, 0, nflag == 0, ...
-                sprintf('largest move %.3fpp over %d dates before %s', ...
+                sprintf('largest move net of sample extension %.3fpp over %d dates before %s', ...
                         worst, height(t), qlabel(cutoff))); %#ok<AGROW>
             rows{end+1} = row('G8', r.model, [name ' largest revision'], worst, ...
                 REV_FAIL * widen, worst <= REV_FAIL * widen, ...

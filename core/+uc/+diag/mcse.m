@@ -4,8 +4,8 @@
 %
 % One MCSE per column of draws: the standard error of that column's posterior
 % mean, accounting for the chain's autocorrelation through the spectral variance
-% at zero. Guardrail G8 anchors its revision tolerance to these, at 3 x MCSE, so
-% a move smaller than the sampler's own noise is not reported as a revision.
+% at zero. Guardrail G8 anchors its revision tolerance to these, at 4 x sqrt(2) x
+% MCSE, so a move the size of the sampler's own noise is not reported as a revision.
 
 function MCSE = mcse(draws, L)
 % Computes Monte Carlo standard errors (MCSEs) for posterior means

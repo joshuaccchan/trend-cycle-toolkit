@@ -190,6 +190,38 @@ verifyFalse(t, any(rep.checks.id == "G8" & rep.checks.status == "fail"), ...
 end
 
 
+function testSampleExtensionAloneDoesNotFailG8(t)
+% A longer sample moves a smoothed path at every date. That movement is the sample
+% column of the revision table, and G8 judges what is left without it.
+revs = one_revision(0.5);
+revs.sample = 0.5;
+[prev, data] = g9_fixture(false, 1);
+rep = guardrails(fake_result(), prev, data, revs, 'Vintage', '2015Q1');
+verifyFalse(t, any(rep.checks.id == "G8" & rep.checks.status == "fail"), ...
+    'a move that is all sample extension must pass G8');
+
+revs.sample = 0.1;
+rep = guardrails(fake_result(), prev, data, revs, 'Vintage', '2015Q1');
+verifyTrue(t, any(rep.checks.id == "G8" & rep.checks.status == "fail"), ...
+    'the 0.4pp the longer sample does not explain must fail G8');
+end
+
+
+function testG8AllowsFourStandardErrorsOfARevision(t)
+% A revision is the difference of two chains, so its Monte Carlo standard error is
+% sqrt(2) x MCSE. Where the MCSE is 0.10, four of those are 0.566pp.
+r = fake_result();
+r.diagnostics.mcse(:) = 0.10;
+[prev, data] = g9_fixture(false, 1);
+rep = guardrails(r, prev, data, one_revision(0.50), 'Vintage', '2015Q1');
+verifyFalse(t, any(rep.checks.id == "G8" & rep.checks.status == "fail"), ...
+    '0.50pp is inside four standard errors of a revision');
+rep = guardrails(r, prev, data, one_revision(0.60), 'Vintage', '2015Q1');
+verifyTrue(t, any(rep.checks.id == "G8" & rep.checks.status == "fail"), ...
+    '0.60pp is outside them');
+end
+
+
 function testARebaseIsNotARevision(t)
 % A new base year rescales every level and leaves every growth rate alone.
 [prev, data] = g9_fixture(false, 1.1);

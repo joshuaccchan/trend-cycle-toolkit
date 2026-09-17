@@ -218,7 +218,7 @@ revs     = revisions(results, previous, data, ...
 % inside their bounds, acceptance rates in band against the reference run,
 % inefficiency factors and MCSE computed and asserted, the new sample
 % extending the previous one, no NaN anywhere, and the revision tolerance
-% anchored to max(0.20pp, 3*MCSE) with a hard stop above 1.0pp. The
+% anchored to max(0.20pp, 4*sqrt(2)*MCSE) with a hard stop above 1.0pp. The
 % acceptance-rate targets have not been measured, so G6 reports the observed rates
 % and returns n/a. Tolerances
 % apply to the gap and to growth rates, never to the log level of GDP: the next

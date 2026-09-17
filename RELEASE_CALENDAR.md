@@ -62,8 +62,10 @@ estimated on the inputs archived with it, and every value 2026Q2 had already pub
 unchanged. Tag `v2026Q2` keeps the original files and `v2026Q2.1` the amended ones.
 
 **Tolerances are anchored to Monte Carlo error.** A value more than eight quarters before the
-sample end that moves by more than `max(0.20pp, 3 x MCSE)` is flagged; more than 1.0pp fails the
-run pending a human.
+sample end whose revision, with the sample-extension component removed, exceeds
+`max(0.20pp, 4 x √2 x MCSE)` fails the run; more than 1.0pp is held for a person. A revision is the
+difference of two chains, so its Monte Carlo standard error is √2 x MCSE, and the tolerance is four
+of those.
 
 Two breakages are expected rather than accidental:
 

@@ -21,9 +21,10 @@
 %   B  previous sample, new data          sample extension = C - B
 %   C  new sample,      new data          Monte Carlo      = A - as published
 %
-% Chain B ships here because G8 needs it: without it the revision tolerance flags
-% the expected movement near the sample end every quarter. It costs one extra chain
-% per model, which is why this is a separate function with its own switch.
+% Chain B ships here because G8 needs it: G8 judges total - sample, so without it
+% the tolerance would flag the movement a longer sample causes at every date. It
+% costs one extra chain per model, which is why this is a separate function with
+% its own switch.
 %
 % ON THE FIRST RELEASE previous is empty and this returns an empty table with the
 % right variable names. A file of zeros would report a measurement never made.

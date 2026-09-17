@@ -29,8 +29,8 @@ errors for every model's published parameters and dates, with Geweke statistics 
 and selected dates; `trend_cycle_estimates.xlsx`, holding
 the same three series in one workbook; and `metadata.json`, recording the vintage, the git SHA,
 the seed and settings of each model, and the URL, fetch time and SHA-256 of every input. The
-revision tolerance is `max(0.20pp, 3 x MCSE)`, which separates a revision from the sampler's own
-noise.
+revision tolerance is `max(0.20pp, 4 x √2 x MCSE)`, four Monte Carlo standard errors of a revision,
+which separates a revision from the sampler's own noise.
 
 Every release is frozen under `estimates/vintages/YYYYQq/` and tagged, so a paper can cite a
 fixed vintage. A frozen vintage carries the source data it was estimated on, so the SHA-256 values
