@@ -93,11 +93,10 @@ fprintf('run_release: vintage %s, %d model(s), %s mode\n', ...
 % HISTDATA.TXT, the former carrying a projection to 2176 that would be
 % published as history. sources.md is the ledger of what is fetched from where.
 %
-% The second argument to fetch_fred is FRED's own fq= value, spelled exactly as
-% the endpoint takes it, and it is required: no fetcher in this repository has a
-% default frequency, because a series fetched monthly and then differenced as if
-% it were quarterly is a mistake that nothing downstream can see.
-% core/+uc/+data/README.md records the endpoint it becomes, fq=Quarterly&fam=avg.
+% fetch_fred's optional second argument is FRED's fq= value, with the months of
+% each quarter averaged (fam=avg); fetch_fred's header records the endpoint.
+% Both series here are published quarterly, and FRED returns DPCERD3Q086SBEA
+% identically with or without 'Quarterly'.
 %
 % Three series are fetched, because the six models read three inputs between
 % them: PCE inflation for the four trend inflation models, GDPC1 for the two
