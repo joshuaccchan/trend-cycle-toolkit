@@ -6,7 +6,7 @@
 % holds the package folder +uc, so everything is called with the prefix:
 %
 %   out = uc.models.ucsv_sw07(y);
-%   raw = uc.data.fetch_fred('CPIAUCSL', 'Quarterly');
+%   raw = uc.data.fetch_fred('DPCERD3Q086SBEA', 'Quarterly');
 %
 % The root goes on as well, because run_release.m sits there and should resolve as
 % a command from any folder. The path change lasts for the session only.

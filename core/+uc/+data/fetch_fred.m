@@ -1,7 +1,7 @@
 function tbl = fetch_fred(seriesId, freq, opts)
 % uc.data.fetch_fred - one FRED series as a quarterly table of levels.
 %
-%   tbl = uc.data.fetch_fred('CPIAUCSL', 'Quarterly')
+%   tbl = uc.data.fetch_fred('DPCERD3Q086SBEA', 'Quarterly')
 %   tbl = uc.data.fetch_fred('GDPC1')            % already quarterly at source
 %
 % Returns a table of date (datetime, quarter start as FRED labels it) and value
