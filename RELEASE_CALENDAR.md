@@ -41,10 +41,11 @@ Exact agency dates are not tabulated here; BEA's release schedule has them.
 - **The reference quarter must match.** FRED returns the running quarter as a present row with an
   empty value. That row is dropped, and the run then asserts the data reach the vintage being
   released. A mismatch stops the release rather than publishing a quarter short.
-- **Every fetch is validated by magic bytes, not HTTP status.** The Philadelphia Fed answers
-  HTTP 200 with an HTML error page for an unknown path, so a status check passes a document that
-  is not a spreadsheet. A failed validation reuses the last archived source vintage and opens an
-  issue; it does not cancel the release.
+- **Every fetch is validated by its content, not its HTTP status**, since an error page can arrive
+  with status 200. A FRED download must begin with the header FRED's CSV carries, and the FRB/US
+  package with the ZIP signature. A failed fetch stops the release before anything is written: the
+  Monday trigger does not retry that quarter until its failure marker is deleted, and the freshness
+  watchdog opens an issue once the data have been ahead of the estimates at two Monday checks.
 - **The guardrails gate promotion.** Estimates are written to a staging path and copied into
   `estimates/` only once every check passes. `matlab -batch` exits 0 on a NaN posterior, so
   failure has to be an explicit error rather than an absent complaint. The full list is in

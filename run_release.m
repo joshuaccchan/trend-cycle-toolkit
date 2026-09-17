@@ -84,14 +84,12 @@ end
 fprintf('run_release: vintage %s, %d model(s), %s mode\n', ...
     vintage, numel(opt.Models), opt.Mode);
 
-% Each fetcher validates its own payload and errors on failure. Three
-% traps are known and each has cost someone a bad number before: FRED returns
-% the running quarter as a present row with an empty value, which becomes NaN
-% under 400*log differencing; the Philadelphia Fed answers 200 with an HTML
-% error page for an unknown media path, so magic bytes are checked and never
-% the status code; and the FRB/US package contains LONGBASE.TXT as well as
-% HISTDATA.TXT, the former carrying a projection to 2176 that would be
-% published as history. sources.md is the ledger of what is fetched from where.
+% Each fetcher validates its own payload and errors on failure. Two traps are
+% known: FRED returns the running quarter as a present row with an empty value,
+% which becomes NaN under 400*log differencing; and the FRB/US package contains
+% LONGBASE.TXT as well as HISTDATA.TXT, the former carrying a projection to 2176
+% that would be published as history. sources.md is the ledger of what is
+% fetched from where.
 %
 % fetch_fred's optional second argument is FRED's fq= value, with the months of
 % each quarter averaged (fam=avg); fetch_fred's header records the endpoint.

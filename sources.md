@@ -53,8 +53,3 @@ error, which is why they are written down.
 4. **`fredgraph.csv` silently ignores a `vintage_date` parameter**, returning the current vintage
    byte-identically. There is no real-time vintage without the FRED API, which is why each
    release archives its own raw fetch.
-
-## Off the release path
-
-`uc.data.fetch_spf_cpi10` fetches the Philadelphia Fed's median 10-year-ahead CPI forecast. No
-release fetches it. It is the only public long-run CPI expectation, and it begins in 1991Q4.
