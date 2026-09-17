@@ -9,8 +9,8 @@
 % NOTHING HERE TOUCHES THE NETWORK. The fetchers are exercised through their
 % 'File' option on fixtures written to a temporary folder, so the suite runs the
 % parser and its guards without a live source. The draw-for-draw comparison
-% against the published drivers does need the network and is not part of this
-% suite; it is run by hand before a release.
+% against the published code, tests/equivalence/run_equivalence.m, needs the
+% network and is not part of this suite; it is run by hand.
 %
 % UC_SKIP_TESTS takes a comma-separated list of test function names. A name in it
 % that matches no test is an error, so a skip cannot quietly stop skipping when a

@@ -7,8 +7,8 @@
 # run_release.m produces them on a licensed machine and runs the same suite first.
 #
 # Not covered here: the draw-for-draw comparison of each model with its published
-# package, which is run by hand, and any chain long enough to matter, which only a
-# release runs.
+# package, tests/equivalence/run_equivalence.m, which needs the network and is run
+# by hand, and any chain long enough to matter, which only a release runs.
 name: Unit tests
 
 on:

@@ -111,16 +111,18 @@ core/+uc/          the library
 estimates/         the release pipeline — see estimates/README.md
 run_release.m      the driver
 tools/             run_update.ps1, the scheduled entry point
+tests/unit/        the unit suite, run by CI and before every release
+tests/equivalence/ each model against its published code, draw for draw
 setup.m            puts the repository root and core/ on the path
 ```
 
-Each model is checked against the driver it was taken from. Download that package from
-[joshuachan.org/code.html](https://joshuachan.org/code.html) into a scratch directory outside the
-repository, or take `chapter10/UCSV.m` from
+`tests/equivalence/run_equivalence.m` checks each model against the published code it was taken
+from. It downloads each package from [joshuachan.org/code.html](https://joshuachan.org/code.html),
+and `chapter10/UCSV.m` from
 [bayesian-macroeconometrics](https://github.com/joshuaccchan/bayesian-macroeconometrics) for
-`ucsv_sw07`, run it on the data that package ships, run the implementation here on the same data
-under the same seed, and require the same draws. It needs the network, so it is run by hand
-rather than in CI.
+`ucsv_sw07`, runs the published sampler and the function here on the package's own data from one
+seed, and requires identical draws. It needs the network, so it is run by hand rather than in CI,
+and after any change to a model or a function it calls.
 
 ## Requirements
 
