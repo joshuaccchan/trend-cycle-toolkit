@@ -45,4 +45,14 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .github/traffic/traffic.csv
           git diff --cached --quiet || git commit -m "Traffic snapshot $(date -u +%F)"
-          git push
+          # Another push may have landed since checkout: the other weekly workflow or a
+          # release. Neither touches this file, so replaying this commit on top of them
+          # cannot conflict.
+          for attempt in 1 2 3; do
+            if git pull --rebase --quiet && git push --quiet; then break; fi
+            if [ "$attempt" = 3 ]; then
+              echo "::error::the traffic row could not be pushed after three attempts"
+              exit 1
+            fi
+            sleep $((attempt * 15))
+          done
