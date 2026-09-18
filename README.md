@@ -7,14 +7,9 @@ every quarter from public data.
 ## Status
 
 The current vintage is **2026Q2**, released 2026-09-12 and tagged `v2026Q2`. It covers 1947Q1
-onward, except `biuc_lrexp`, which begins in 1960Q2 and ends where FRB/US `PTR` ends. Every check
-in `estimates/guardrails.m` passed; a release is promoted only when they all do.
-
-`uc_ma` was added to the 2026Q2 vintage on 2026-09-16, estimated on the inputs archived with it.
-No value already published for the other five models changed. `metadata.json` records the
-amendment; tag `v2026Q2.1` marks the amended vintage and `v2026Q2` the original.
-
-Each model reproduces the published driver it was taken from, draw for draw.
+onward, except `biuc_lrexp`, which begins in 1960Q2 and ends where FRB/US `PTR` ends. A release is
+promoted only when every check in `estimates/guardrails.m` passes, and this one did.
+`RELEASE_CALENDAR.md` carries the release history.
 
 ## The Three Series
 
@@ -24,17 +19,14 @@ Each model reproduces the published driver it was taken from, draw for draw.
 | Output gap | `estimates/current/output_gap.csv` | `uc_2m`, `ucur_break2` |
 | Trend output growth | `estimates/current/trend_growth.csv` | `uc_2m`, from the same draws as its gap |
 
-Each release also writes `diagnostics.csv`, holding inefficiency factors, Monte Carlo standard
-errors for every model's published parameters and dates, with Geweke statistics on the scalar parameters
-and selected dates; `trend_cycle_estimates.xlsx`, holding
-the same three series in one workbook; and `metadata.json`, recording the vintage, the git SHA,
-the seed and settings of each model, and the URL, fetch time and SHA-256 of every input. The
-revision tolerance is `max(0.20pp, 4 x √2 x MCSE)`, four Monte Carlo standard errors of a revision,
-which separates a revision from the sampler's own noise.
+Each release also writes `diagnostics.csv`, holding inefficiency factors and Monte Carlo standard
+errors for every published parameter and date with Geweke statistics on the scalar parameters;
+`trend_cycle_estimates.xlsx`, holding the three series in one workbook; and `metadata.json`,
+recording the vintage, the git SHA, the seed and settings of each model, and the URL, fetch time
+and SHA-256 of every input.
 
-Every release is frozen under `estimates/vintages/YYYYQq/` and tagged, so a paper can cite a
-fixed vintage. A frozen vintage carries the source data it was estimated on, so the SHA-256 values
-in its `metadata.json` refer to files beside them.
+Every release is frozen under `estimates/vintages/YYYYQq/` and tagged, with the source data it was
+estimated on beside it, so a paper can cite a fixed vintage.
 
 ## The Six Models
 
@@ -58,45 +50,40 @@ is published in PCE terms, and that is the combination reaching back to 1960 tha
 Koop report and that their `M1.m` reads. The other three models follow PCE so the four columns
 share one price index.
 
-Every model runs on all available data. Each sample begins at the first quarter its inputs
-support, so a release extends the sample at the end. `biuc_lrexp` begins in 1960Q2: `PTR` starts
-in 1968Q1, `uc.data.build_ptr` holds it flat over the 32 quarters back to 1960Q1 as the published
-package does, and the first quarter is the presample observation the model takes. It also ends
-where `PTR` ends, so when the Board has not refreshed the FRB/US package that column runs a
-quarter behind the others.
+Every model runs on all available data, beginning at the first quarter its inputs support, so a
+release extends the sample at the end. `biuc_lrexp` begins in 1960Q2, where `uc.data.build_ptr`
+holds `PTR` flat back from its 1968Q1 start as the published package does, and ends where `PTR`
+ends, so when the Board has not refreshed the FRB/US package that column runs a quarter behind
+the others.
 
 `uc_ma` has a random-walk trend with a constant variance and MA(1) transitory errors with
-stochastic volatility. In Chan (2013) the MA(1) term makes the trend much smoother than in the same
-model without it. Its trend is also far smoother than that of `ucsv_sw07`, whose trend variance is
-itself stochastic.
+stochastic volatility, which in Chan (2013) makes the trend much smoother than the same model
+without the MA(1) term, and smoother than `ucsv_sw07`, whose trend variance is itself stochastic.
 
 `uc_2m` puts a second-order Markov process on the trend, the trend the Hodrick-Prescott filter
-implies, and lets the cycle be serially correlated, which the filter does not allow; its implied
-trend growth varies smoothly from quarter to quarter. Trend growth is a main output of that paper
-and is computed from the same draws as the gap. `ucur_break2` correlates the trend and cycle
-errors and places two breaks in trend growth, at 1973Q1 and 2007Q1, estimating a drift for each
-of the three regimes, so its implied trend growth is a step function. The two models run on the
-same series, so the distance between their gap estimates is what the specification contributes.
+implies, and lets the cycle be serially correlated, which the filter does not allow; its trend
+growth varies smoothly from quarter to quarter and is computed from the same draws as the gap.
+`ucur_break2` correlates the trend and cycle errors and breaks trend growth at 1973Q1 and 2007Q1,
+estimating a drift for each of the three regimes, so its trend growth is a step function. The two
+run on the same series, so the distance between their gap estimates is what the specification
+contributes.
 
 These are re-implementations. Each takes its data and settings as arguments where the published
 driver hard-coded them, seeds from `rng(seed,'threefry')` where the driver seeded from the clock,
 and drops the plotting and the marginal-likelihood step. Nothing in the samplers themselves is
-touched, and lines that differ from the published driver are marked `[uc]`.
-
-Three models run longer chains than their published drivers, because on current data the
-published lengths leave too small an effective sample. `estimates/preset.m` carries the lengths
-and the published values they depart from; `estimates/README.md` carries the measurements.
+touched, and lines that differ from the published driver are marked `[uc]`. Three models run
+longer chains than their drivers did, because on current data the published lengths leave too
+small an effective sample; `estimates/preset.m` carries both lengths and `estimates/README.md`
+the measurements.
 
 ## How the Estimates Update
 
-Estimation runs on one machine, shortly after BEA's advance estimate of GDP completes each quarter,
-about a month after the quarter ends. A scheduled task runs `tools/run_update.ps1 -IfNewData` every Monday,
-which checks FRED for a new quarter and, when there is one, estimates, commits, tags and pushes
-what the run promoted. A release is
-promoted only when every check in `estimates/guardrails.m` passes; a refused release leaves the
-tracked tree untouched and its report under `build/`. GitHub Actions runs a weekly freshness
-check and the unit suite. `RELEASE_CALENDAR.md` lists the dates, the inputs each release
-requires, and the revision policy.
+A scheduled task runs `tools/run_update.ps1 -IfNewData` every Monday, which checks FRED for a new
+quarter and, when there is one, estimates, commits, tags and pushes what the run promoted. That
+falls shortly after BEA's advance estimate of GDP, about a month after the quarter ends. A refused
+release leaves the tracked tree untouched and its report under `build/`. GitHub Actions runs a
+weekly freshness check and the unit suite. `RELEASE_CALENDAR.md` lists the dates, the inputs each
+release requires, and the revision policy.
 
 ## The Code
 
@@ -116,38 +103,34 @@ tests/equivalence/ each model against its published code, draw for draw
 setup.m            puts the repository root and core/ on the path
 ```
 
-`tests/equivalence/run_equivalence.m` checks each model against the published code it was taken
-from. It downloads each package from [joshuachan.org/code.html](https://joshuachan.org/code.html),
-and `chapter10/UCSV.m` from
-[bayesian-macroeconometrics](https://github.com/joshuaccchan/bayesian-macroeconometrics) for
-`ucsv_sw07`, runs the published sampler and the function here on the package's own data from one
-seed, and requires identical draws. It needs the network, so it is run by hand rather than in CI,
-and after any change to a model or a function it calls.
+`tests/equivalence/run_equivalence.m` runs each published sampler and the function here from one
+seed on the package's own data, and requires identical draws. All six match. It downloads the
+packages from [joshuachan.org/code.html](https://joshuachan.org/code.html), so it needs the
+network and is run by hand after any change to a model.
 
 ## Requirements
 
 MATLAB R2020a or later, for `exportgraphics` in the publication step. The Statistics and Machine
-Learning Toolbox is needed by the four trend inflation models and by the samplers in `uc.sv`,
-which call `gamrnd`, `normcdf` and `normpdf`; the two output-gap models run on base MATLAB. The
-Optimization Toolbox is needed by `biuc_lrexp` and `uc_ma`, whose psi steps run `fminsearch` and
-then `fminunc`; a release without it contains two of the four trend inflation columns. Parallel
-Computing is optional and shortens a release run. `setup.m` checks all three and reports which
-models a missing toolbox removes from the release.
+Learning Toolbox is needed by the four trend inflation models and by the samplers in `uc.sv`; the
+Optimization Toolbox by `biuc_lrexp` and `uc_ma`, whose psi steps run `fminsearch` and then
+`fminunc`. The two output-gap models run on base MATLAB, and Parallel Computing is optional.
+`setup.m` checks all three and reports which models a missing toolbox removes from the release.
 
 ## Sibling Repositories
 
-[bvar-toolkit](https://github.com/joshuaccchan/bvar-toolkit) is a library for large Bayesian
-VARs, and archives the replication package for the precision sampler of Chan and Jeliazkov
-(2009), with which every model here draws its state paths;
-[chan-jeliazkov-2009](https://github.com/joshuaccchan/chan-jeliazkov-2009) holds worked MATLAB
-examples of that sampler. [bayesian-macroeconometrics](https://github.com/joshuaccchan/bayesian-macroeconometrics)
-has MATLAB, Python and R code for all fourteen chapters of the book, and is the source of
-`ucsv_sw07` and `uc.sv.ksc_rw_h0`.
+[bvar-toolkit](https://github.com/joshuaccchan/bvar-toolkit), a library for large Bayesian VARs,
+archives the replication package for the precision sampler of Chan and Jeliazkov (2009), with
+which every model here draws its state paths, and
+[chan-jeliazkov-2009](https://github.com/joshuaccchan/chan-jeliazkov-2009) holds worked examples
+of it. [bayesian-macroeconometrics](https://github.com/joshuaccchan/bayesian-macroeconometrics)
+has MATLAB, Python and R code for the book's fourteen chapters, and is the source of `ucsv_sw07`
+and `uc.sv.ksc_rw_h0`.
 
 ## Citation
 
-`CITATION.cff` is the machine-readable record that GitHub's "Cite this repository" button reads. Cite the paper whose model you use, listed in the table above, together with the vintage
-of the series you used.
+`CITATION.cff` is the machine-readable record behind GitHub's "Cite this repository" button. Cite
+the paper whose model you use, from the table above, together with the vintage you took the
+numbers from.
 
 ## License
 
@@ -158,7 +141,3 @@ The published series are a dataset and carry CC-BY-4.0. That covers the CSV, XLS
 PDF files under `estimates/current/`, `estimates/vintages/`, `estimates/revisions/` and
 `estimates/figures/`. Use them anywhere, including commercially, with attribution: cite this
 repository, the vintage you took the numbers from, and the paper behind the series you use.
-
-Four of the six models are joint work — with Gary Koop and Simon M. Potter, with Todd E. Clark
-and Gary Koop, and two with Angelia L. Grant — one is Joshua Chan's alone, and one is by James H.
-Stock and Mark W. Watson. Cite the paper whose model you use.
