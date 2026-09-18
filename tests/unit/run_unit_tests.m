@@ -12,6 +12,9 @@
 % against the published code, tests/equivalence/run_equivalence.m, needs the
 % network and is not part of this suite; it is run by hand.
 %
+% test_release_cycle.m runs the pipeline over two releases, on the levels already
+% archived under estimates/sources/. It is about half this suite's running time.
+%
 % UC_SKIP_TESTS takes a comma-separated list of test function names. A name in it
 % that matches no test is an error, so a skip cannot quietly stop skipping when a
 % test is renamed.
