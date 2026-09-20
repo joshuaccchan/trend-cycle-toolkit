@@ -12,10 +12,10 @@ uncertainty. Where the choice of model is not clear, report more than one and sa
 
 | If you want | Use | The assumption you are accepting |
 |---|---|---|
-| The standard forecasting benchmark for inflation | `ucsv_sw07` | Permanent and transitory innovations both carry stochastic volatility, and nothing restricts the trend |
-| A trend restricted to a plausible range | `ar_trend_bound` | Trend inflation lies between 0 and 5 percent, and the inflation gap is persistent |
+| The standard forecasting benchmark for inflation | `ucsv_sw07` | The inflation gap is serially uncorrelated, both innovations carry stochastic volatility, and nothing restricts the trend |
+| A trend restricted to a plausible range | `ar_trend_bound` | Trend inflation lies between 0 and 5 percent, and the inflation gap follows a time-varying AR(1) |
 | A trend estimated jointly with measured expectations | `biuc_lrexp` | A survey measure of long-run expectations is informative about the trend, through a link that drifts over time |
-| Short-run dependence held in the transitory component | `uc_ma` | Transitory errors follow an MA(1), and the trend innovation variance is constant |
+| Short-run dependence held in the transitory component | `uc_ma` | The inflation gap follows an MA(1), and the trend innovation variance is constant |
 | An output gap with a smooth trend and large cycles | `uc_2m` | Shocks reach the trend only through its growth rate, whose variance the prior bounds tightly, as the Hodrick-Prescott filter implies |
 | An output gap whose trend follows output closely | `ucur_break2` | The trend level takes shocks directly, around a drift that is constant between the breaks at 1973Q1 and 2007Q1 |
 | Trend output growth | `uc_2m` | As above; it is the only published trend growth series |
@@ -23,8 +23,11 @@ uncertainty. Where the choice of model is not clear, report more than one and sa
 ## Trend Inflation
 
 The four models decompose annualized quarterly PCE inflation into a trend and a transitory
-component. They differ in what the trend is permitted to do and in what the transitory component
-can account for, and these two choices explain the differences between the published series.
+component, the inflation gap. They differ in what the trend is permitted to do and in what serial
+dependence the gap is permitted to carry. The second choice is the one most easily overlooked:
+`ucsv_sw07` takes the gap to be serially uncorrelated, so persistence in inflation is accommodated
+by moving the trend, while `uc_ma` gives the gap an MA(1), and `ar_trend_bound` and `biuc_lrexp`
+give it a time-varying AR(1).
 
 ### Stock and Watson (2007): `ucsv_sw07`
 
@@ -34,10 +37,16 @@ innovation:
     y_t   = tau_t + exp(h_t/2) e_t
     tau_t = tau_{t-1} + exp(g_t/2) u_t
 
-where `tau_t` is trend inflation and the log-volatilities `h_t` and `g_t` are random walks. No
-restriction is placed on the level of the trend, and the relative size of the two volatilities
-governs how much of a movement in inflation is attributed to the trend. The estimated trend is
-the most variable of the four.
+where `tau_t` is trend inflation, `e_t` and `u_t` are standard normal and independent across
+quarters, and the log-volatilities `h_t` and `g_t` are random walks.
+
+The assumption to weigh is the one on the inflation gap. Here the gap is `exp(h_t/2) e_t`, which
+is serially uncorrelated given its volatility path: the model allows the size of a transitory
+shock to change over time and allows no dependence between one quarter's shock and the next.
+Persistence in inflation beyond a random walk therefore has one place to go, which is the trend,
+and that is a large part of why the estimated trend is the most variable of the four. Nothing
+restricts the level of the trend, and the relative size of the two volatilities governs how much
+of a movement in inflation is attributed to it.
 
 This model is the standard benchmark in the inflation forecasting literature, which makes it the
 natural choice for comparison with published forecasting results. The sample begins in 1947Q2.
@@ -66,6 +75,9 @@ survey enters a second measurement equation whose intercept and loading on the t
 time-varying, so the link between the two is estimated and allowed to drift. The survey measure
 is `PTR` from the Federal Reserve Board's FRB/US model.
 
+The inflation gap follows a time-varying AR(1) with stochastic volatility, as in
+`ar_trend_bound`, so persistence in inflation is again accommodated outside the trend.
+
 The second observable is itself informative about the trend, which is why the credible interval is
 much narrower than the others. The series is not independent evidence that expectations are
 anchored: the link between expectations and the trend is imposed by the specification, and what
@@ -80,10 +92,15 @@ Unobserved components with an MA(1) transitory component and stochastic volatili
     y_t   = tau_t + u_t + psi u_{t-1},   u_t ~ N(0, exp(h_t)),   |psi| < 1
     tau_t = tau_{t-1} + v_t,             v_t ~ N(0, sigma_tau^2)
 
-where the log-volatility `h_t` is a stationary AR(1). Two assumptions separate this model from
-`ucsv_sw07`: short-run dependence is held in the transitory component through the MA(1) term,
-and the trend innovation variance is constant where UCSV makes it stochastic. Both contribute to
-the difference between the two estimated trends.
+where the log-volatility `h_t` is a stationary AR(1).
+
+The inflation gap here is `u_t + psi u_{t-1}`, an MA(1), so one quarter's gap carries part of the
+previous quarter's shock. This is the assumption that separates the model from `ucsv_sw07`, whose
+gap is serially uncorrelated: the persistence that UCSV can accommodate only by moving the trend
+is accommodated here within the transitory component, which leaves the estimated trend much
+smoother. Chan (2013) reports the same effect against the version of the model without the MA
+term. A second difference works in the same direction: the trend innovation variance is constant
+here where UCSV makes it stochastic.
 
 Use this model where short-run dependence in inflation is better treated as transitory than as
 movement in the trend. The sample begins in 1947Q2.
