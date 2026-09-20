@@ -33,8 +33,9 @@ site goes unnoticed until a release run reaches it. This table, those headers an
 | `report = guardrails(results, previous, data, revs, Name, Value)` | One report struct: `pass`, `nfail`, `checks`, `vintage`, `revision`. Option `Vintage` |
 | `files = publish(results, report, revs, manifest, stagedir, Name, Value)` | The files written, in write order. Options `Vintage`, `Promote`, `Mode`, `Dest`. The only function here that writes into `estimates/` |
 | `files = draw_figures(csvdir, vintage, outdir)` | A PNG and a PDF per series, drawn from the published CSVs in `csvdir`, so a figure shows only published numbers and any vintage can be redrawn without re-estimating |
+| `rows = model_summary(csvdir, docfile)` | One row per model: last quarter, posterior mean, band width, variability. Given `docfile`, rewrites the generated block in `MODELS.md` from the same CSVs, and errors rather than leaving an older vintage's numbers in place |
 
-Two conventions hold across all eight: positional arguments are the things a call cannot do
+Two conventions hold across all nine: positional arguments are the things a call cannot do
 without, so a missing one errors instead of silently skipping a check; and every option name is
 capitalized, matching the seven `run_release.m` itself takes.
 

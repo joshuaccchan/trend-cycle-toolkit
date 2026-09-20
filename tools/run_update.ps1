@@ -4,7 +4,8 @@
 
 .DESCRIPTION
   The release entry point. It runs run_release.m under `matlab -batch`, and
-  commits only what that run promoted into estimates/.
+  commits only what that run promoted into estimates/, together with the vintage
+  numbers run_release rewrites in MODELS.md.
 
   Everything that decides whether a release is fit to publish lives in MATLAB,
   in estimates/guardrails.m. This script decides nothing. It runs the release,
@@ -142,10 +143,11 @@ Write-Host "matlab:     $MatlabExe"
 
 # ---- refuse to run on a dirty tree ---------------------------------------
 # A release commit should contain the release and nothing else. Uncommitted
-# work in the tree would be swept into it by the `git add estimates` below.
-$dirty = git status --porcelain -- estimates
+# work in the tree would be swept into it by the `git add` below. MODELS.md is
+# included because run_release rewrites its vintage numbers from the promoted CSVs.
+$dirty = git status --porcelain -- estimates MODELS.md
 if ($dirty) {
-    Write-Host "`nestimates/ has uncommitted changes:" -ForegroundColor Yellow
+    Write-Host "`nestimates/ or MODELS.md has uncommitted changes:" -ForegroundColor Yellow
     $dirty | ForEach-Object { Write-Host "  $_" }
     throw "Commit or stash them first: a release commit should hold the release and nothing else."
 }
@@ -198,11 +200,11 @@ if (-not (Test-Path $metaPath)) { throw "estimates\current\metadata.json is miss
 $meta = Get-Content $metaPath -Raw | ConvertFrom-Json
 $v = $meta.vintage
 Write-Host "`npromoted vintage $v, generated $($meta.generated_utc)"
-Write-Host "files changed under estimates/:"
-$changed | ForEach-Object { Write-Host "  $_" }
+Write-Host "files changed under estimates/ and MODELS.md:"
+git status --porcelain -- estimates MODELS.md | ForEach-Object { Write-Host "  $_" }
 
 # ---- commit and tag -------------------------------------------------------
-git add estimates
+git add estimates MODELS.md
 $msg = @"
 Estimates for $v
 

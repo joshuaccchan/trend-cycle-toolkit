@@ -22,7 +22,7 @@
 %   6. revisions        load the previous vintage, then the sample-extension chain
 %   7. guardrails       every check between a bad fetch and a bad series
 %   8. stage            write everything under build/staging/<vintage>
-%   9. promote          only on all-green
+%   9. promote          only on all-green, then MODELS.md's vintage numbers
 %
 % PROMOTION IS GATED AND STAGED. matlab -batch exits 0 whenever the script finishes
 % without throwing, and a NaN chain, an HTML error page served with a 200 status
@@ -254,6 +254,10 @@ end
 files = publish(results, report, revs, manifest, stagedir, ...
             'Vintage', vintage, 'Promote', true, 'Mode', opt.Mode);
 
+% MODELS.md quotes the release. Its generated block is rewritten from the
+% promoted CSVs, so the guide cannot describe one vintage in numbers from another.
+model_summary(fullfile(root, 'estimates', 'current'), fullfile(root, 'MODELS.md'));
+
 fprintf('run_release: promoted %s in %.1f min. Files written:\n', ...
     vintage, toc(t_release)/60);
 fprintf('  %s\n', files{:});
@@ -293,6 +297,7 @@ stages = { ...
     'guardrails',                           'estimates/guardrails.m'
     'stage, promote, metadata',             'estimates/publish.m'
     'draw the published figures',           'estimates/draw_figures.m'
+    'vintage numbers in MODELS.md',         'estimates/model_summary.m'
     };
 
 % The suite is only a stage when the run is going to call it.
