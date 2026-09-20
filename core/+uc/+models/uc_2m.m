@@ -7,8 +7,9 @@ function out = uc_2m(y, opts)
 % The model of Grant and Chan (2017), "Reconciling Output Gaps: Unobserved
 % Components Model and Hodrick-Prescott Filter", Journal of Economic Dynamics and
 % Control, 75, 114-121. The trend follows a second-order Markov process, which is
-% what the Hodrick-Prescott filter implies, and the cycle is allowed to be serially
-% correlated, which the filter does not allow.
+% what the Hodrick-Prescott filter implies, so trend growth itself follows a random
+% walk. The cycle is allowed to be serially correlated and the trend and cycle
+% innovations to be correlated, neither of which the filter allows.
 %
 % y is 100*log of real output. Univariate: nothing else enters. Two of the three
 % published series come out of one set of draws:

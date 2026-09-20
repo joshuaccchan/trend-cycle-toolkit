@@ -6,9 +6,10 @@ function out = ucur_break2(y, breaks, opts)
 %
 % The two-break model of Grant and Chan (2017), "A Bayesian Model Comparison for
 % Trend-Cycle Decompositions of Output", Journal of Money, Credit and Banking,
-% 49(2-3), 525-552. The trend and cycle innovations are correlated, and trend output
-% growth takes a different constant value in each of the three regimes the breaks
-% define, so its trend growth is a step function where uc_2m's varies smoothly.
+% 49(2-3), 525-552. The trend is a random walk whose drift takes a different value in
+% each of the three regimes the breaks define, and the trend and cycle innovations
+% are correlated. The drift is a step function; realized trend growth is not, since
+% it carries the trend innovation.
 %
 % y is 100*log of real output. breaks is a two-element vector of ROW INDICES into
 % y, in increasing order, which is what the sampler needs; resolve them from

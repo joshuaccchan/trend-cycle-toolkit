@@ -3,15 +3,18 @@ title: "trend-cycle-toolkit: US trend inflation, the output gap and trend output
 message: >-
   If you use the published series, cite this software record and the vintage you
   took the numbers from — the vintage stamp is in
-  estimates/current/metadata.json and in the release tag. If you use one of the
-  models, cite the paper whose method it implements: the six references below,
-  mapped to models in README.md.
+  estimates/current/metadata.json and in the release tag, and the current tag is
+  v2026Q2.1. If you use one of the models, cite the paper whose method it
+  implements: the six references below, mapped to models in README.md.
 type: software
 authors:
   - family-names: Chan
     given-names: Joshua C. C.
     orcid: "https://orcid.org/0000-0003-3632-128X"
     affiliation: Purdue University
+version: v2026Q2.1
+date-released: 2026-09-16
+url: "https://joshuachan.org/estimates.html"
 repository-code: "https://github.com/joshuaccchan/trend-cycle-toolkit"
 abstract: >-
   Three US macroeconomic series — trend inflation, the output gap and trend

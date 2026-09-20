@@ -7,9 +7,9 @@ function out = ar_trend_bound(y, y0, opts)
 % The model of Chan, Koop and Potter (2013), "A New Model of Trend Inflation",
 % Journal of Business and Economic Statistics, 31(1), 94-106:
 %
-%   y_t   = tau_t + rho_t (tau_t - tau_{t-1}) + u_t,   u_t ~ N(0, exp(h_t))
+%   y_t - tau_t = rho_t (y_{t-1} - tau_{t-1}) + u_t,   u_t ~ N(0, exp(h_t))
 %   tau_t = tau_{t-1} + v_t,        a < tau_t < b
-%   rho_t                            0 < rho_t < rhob
+%   rho_t = rho_{t-1} + w_t,        0 < rho_t < rhob
 %
 % y is annualized percent inflation over the estimation sample and y0 the one
 % presample observation the measurement equation needs, both from

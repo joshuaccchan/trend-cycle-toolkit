@@ -4,12 +4,15 @@ Bayesian unobserved components models for US trend inflation, the output gap and
 growth, by [Joshua Chan](https://joshuachan.org). Three series from six models, re-estimated
 every quarter from public data.
 
+**The estimates, with figures and downloads: [joshuachan.org/estimates.html](https://joshuachan.org/estimates.html)**
+
 ## Status
 
-The current vintage is **2026Q2**, released 2026-09-12 and tagged `v2026Q2`. It covers 1947Q1
-onward, except `biuc_lrexp`, which begins in 1960Q2 and ends where FRB/US `PTR` ends. A release is
-promoted only when every check in `estimates/guardrails.m` passes, and this one did.
-`RELEASE_CALENDAR.md` carries the release history.
+The current vintage is **2026Q2**, released 2026-09-12 and tagged **`v2026Q2.1`**, which is the
+tag to cite: it carries all six models, where the original `v2026Q2` predates `uc_ma`. The vintage
+covers 1947Q1 onward, except `biuc_lrexp`, which begins in 1960Q2 and ends where FRB/US `PTR`
+ends. A release is promoted only when every check in `estimates/guardrails.m` passes, and this one
+did. `RELEASE_CALENDAR.md` carries the release history.
 
 ## The Three Series
 
@@ -45,6 +48,9 @@ The five Chan papers have replication packages at
 `ucsv_sw07` follows `chapter10/UCSV.m` in the book repository,
 [bayesian-macroeconometrics](https://github.com/joshuaccchan/bayesian-macroeconometrics).
 
+[MODELS.md](MODELS.md) sets out what each model assumes, why their estimates differ — 1.99 to 4.76
+percent for trend inflation in 2026Q2 — and which to use for which question.
+
 **Trend inflation here is PCE inflation.** `biuc_lrexp` pairs inflation with FRB/US `PTR`, which
 is published in PCE terms, and that is the combination reaching back to 1960 that Chan, Clark and
 Koop report and that their `M1.m` reads. The other three models follow PCE so the four columns
@@ -60,13 +66,14 @@ the others.
 stochastic volatility, which in Chan (2013) makes the trend much smoother than the same model
 without the MA(1) term, and smoother than `ucsv_sw07`, whose trend variance is itself stochastic.
 
-`uc_2m` puts a second-order Markov process on the trend, the trend the Hodrick-Prescott filter
-implies, and lets the cycle be serially correlated, which the filter does not allow; its trend
-growth varies smoothly from quarter to quarter and is computed from the same draws as the gap.
-`ucur_break2` correlates the trend and cycle errors and breaks trend growth at 1973Q1 and 2007Q1,
-estimating a drift for each of the three regimes, so its trend growth is a step function. The two
-run on the same series, so the distance between their gap estimates is what the specification
-contributes.
+The two output gap models differ in the trend equation. `uc_2m` puts a second-order Markov process
+on the trend, the process the Hodrick-Prescott filter implies, so trend growth itself follows a
+random walk; its annualized trend growth is published, from the same draws as its gap.
+`ucur_break2` makes the trend a random walk whose drift takes a different value in each of the
+three regimes set by breaks at 1973Q1 and 2007Q1, so the drift is a step function while realized
+trend growth is not. Both estimate a correlation between the trend and cycle innovations, and both
+allow a serially correlated cycle. The two run on the same series, so the distance between their
+gap estimates is what the specification contributes.
 
 These are re-implementations. Each takes its data and settings as arguments where the published
 driver hard-coded them, seeds from `rng(seed,'threefry')` where the driver seeded from the clock,

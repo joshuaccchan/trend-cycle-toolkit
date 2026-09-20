@@ -7,8 +7,8 @@ function out = biuc_lrexp(infl, expect, opts)
 % Model M1 of Chan, J.C.C., Clark, T.E. and Koop, G. (2018), "A New Model of
 % Inflation, Trend Inflation, and Long-Run Inflation Expectations", Journal of
 % Money, Credit and Banking, 50(1), 5-53. Inflation and a survey measure of
-% long-run expectations are modelled jointly, so the expectations series informs
-% the trend directly.
+% long-run expectations are modeled jointly. The survey enters a second
+% measurement equation whose intercept and loading on the trend are time-varying.
 %
 % infl    annualized percent PCE inflation, from uc.data.annualized_log_diff
 % expect  long-run PCE expectations, from uc.data.build_ptr
