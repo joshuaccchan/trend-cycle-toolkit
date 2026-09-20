@@ -322,7 +322,7 @@ end
 
 
 function t = growth_of(levels)
-% 400 times the log difference: annualized per cent, the transform the models read.
+% 400 times the log difference: annualized percent, the transform the models read.
 d = levels.date;
 if ~isdatetime(d), d = datetime(d); end
 t = table(d(2:end), 400 * diff(log(levels.value)), 'VariableNames', {'date', 'value'});

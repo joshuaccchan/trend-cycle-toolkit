@@ -6,7 +6,7 @@
 % writes a PNG and a PDF of each to outdir. Returns the files written.
 %
 % Each figure shows the posterior mean of every model that produces the series, with
-% its 90 per cent credible interval as a band in the same color. The figures are
+% its 90 percent credible interval as a band in the same color. The figures are
 % drawn from the CSVs rather than from the draws, so a figure can only show numbers
 % that were published, and a figure can be redrawn from any vintage without
 % re-estimating anything.
@@ -27,11 +27,11 @@ end
 if ~isfolder(outdir), mkdir(outdir); end
 
 SERIES = {
-    'trend_inflation', 'Trend inflation, PCE', 'per cent, annualized', ...
+    'trend_inflation', 'Trend inflation, PCE', 'percent, annualized', ...
         {'ucsv_sw07', 'ar_trend_bound', 'biuc_lrexp', 'uc_ma'}
-    'output_gap',      'Output gap',           'per cent of trend output', ...
+    'output_gap',      'Output gap',           'percent of trend output', ...
         {'uc_2m', 'ucur_break2'}
-    'trend_growth',    'Trend output growth',  'per cent, annualized', ...
+    'trend_growth',    'Trend output growth',  'percent, annualized', ...
         {'uc_2m'}
     };
 

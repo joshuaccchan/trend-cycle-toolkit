@@ -232,7 +232,7 @@ end
 
 function s = one_series(draws, dates)
 % Draws plus the summary publish.m writes: the posterior mean and the four
-% quantiles that make the 68 and 90 per cent bands.
+% quantiles that make the 68 and 90 percent bands.
 dates = dates(:);
 if size(draws, 2) ~= numel(dates)
     error('uc:estimates:run_estimates:dateMismatch', ...

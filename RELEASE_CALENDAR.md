@@ -10,7 +10,7 @@ it ends. Both inputs the six models read come from that release: real GDP and th
 index. A scheduled task on the release machine runs `tools\run_update.ps1 -IfNewData` every Monday;
 it asks FRED for the newest quarter complete in both series and releases when that quarter is
 newer than the published vintage, so a release follows the advance estimate within a week. The vintage is taken from the data, so a BEA release that
-slips cannot be labelled with a quarter the data do not reach.
+slips cannot be labeled with a quarter the data do not reach.
 
 | Estimates through | Released after BEA's advance estimate, around | Vintage tag |
 |---|---|---|
@@ -21,7 +21,7 @@ slips cannot be labelled with a quarter the data do not reach.
 | 2027Q2 | late July 2027 | `v2027Q2` |
 
 BEA publishes its schedule in advance, and it can change: in 2025 the advance estimate for the
-third quarter was cancelled during the government shutdown and replaced by a combined estimate on
+third quarter was canceled during the government shutdown and replaced by a combined estimate on
 23 December. Triggering on the data rather than on a date is what makes that harmless.
 
 BEA revises each quarter twice more, about a month apart, and revises several years of history in

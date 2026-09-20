@@ -3,7 +3,7 @@
 %   [psi, flag, psihat, invDpsic] = uc.util.sample_psi(psi, fpsi, loop, invDpsic, options)
 %
 % fpsi is the negative log posterior of psi. The candidate is drawn from a normal
-% centred at the mode fminsearch finds, with the Hessian from fminunc as its
+% centered at the mode fminsearch finds, with the Hessian from fminunc as its
 % precision. That Hessian is recomputed at loop 1 and every hundredth loop, so loop
 % must count every sweep, burn-in included. A candidate with an inverse root of
 % modulus 0.99 or more is rejected. flag is true when the candidate is accepted.

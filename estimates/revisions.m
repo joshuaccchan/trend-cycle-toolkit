@@ -109,7 +109,7 @@ end
 function e = previous_sample_end(previous)
 % The last quarter the previous release published, read from its own series
 % rather than from its folder name: the folder is the vintage label, and a
-% release can publish a sample that ends before the quarter it is labelled with.
+% release can publish a sample that ends before the quarter it is labeled with.
 last = NaT;
 for s = fieldnames(previous.series)'
     t = previous.series.(s{1});

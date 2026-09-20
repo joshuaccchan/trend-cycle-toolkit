@@ -102,7 +102,7 @@ if ($IfNewData) {
     # Both series come from BEA's GDP release. The release covers the newest
     # quarter complete in both, and is taken from the data rather than the
     # calendar, so a BEA release that slips past a quarter end cannot be
-    # labelled with a quarter the data do not reach.
+    # labeled with a quarter the data do not reach.
     $newest = @('DPCERD3Q086SBEA', 'GDPC1') | ForEach-Object { Get-NewestQuarter $_ } |
               Sort-Object { Get-QuarterIndex $_ } | Select-Object -First 1
 
