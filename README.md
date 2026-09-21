@@ -125,13 +125,18 @@ Optimization Toolbox by `biuc_lrexp` and `uc_ma`, whose psi steps run `fminsearc
 
 ## Sibling Repositories
 
-[bvar-toolkit](https://github.com/joshuaccchan/bvar-toolkit), a library for large Bayesian VARs,
-archives the replication package for the precision sampler of Chan and Jeliazkov (2009), with
-which every model here draws its state paths, and
-[chan-jeliazkov-2009](https://github.com/joshuaccchan/chan-jeliazkov-2009) holds worked examples
-of it. [bayesian-macroeconometrics](https://github.com/joshuaccchan/bayesian-macroeconometrics)
-has MATLAB, Python and R code for the book's fourteen chapters, and is the source of `ucsv_sw07`
-and `uc.sv.ksc_rw_h0`.
+[statespace-toolkit](https://github.com/joshuaccchan/statespace-toolkit), a MATLAB library for
+Bayesian state space models, archives the replication packages that five of the six models here
+come from: `ARtrendbound.zip` (`ar_trend_bound`), `trend_IE_code.zip` (`biuc_lrexp`),
+`MASV_matlab.zip` (`uc_ma`), `output_gap_2M_code.zip` (`uc_2m`) and `output_gap_code.zip`
+(`ucur_break2`). Its library has the precision sampler of Chan and Jeliazkov (2009), with which
+every model here draws its state paths, as the function `ssm.simulate_states`, and its eight
+examples use it in complete samplers, among them an output gap from a local linear trend with
+an AR(2) cycle (ex04). [bvar-toolkit](https://github.com/joshuaccchan/bvar-toolkit), a library
+for large Bayesian VARs, archives the replication package of Chan and Jeliazkov (2009).
+[bayesian-macroeconometrics](https://github.com/joshuaccchan/bayesian-macroeconometrics) has
+MATLAB, Python and R code for the book's fourteen chapters, and is the source of `ucsv_sw07` and
+`uc.sv.ksc_rw_h0`.
 
 ## Citation
 
