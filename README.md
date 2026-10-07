@@ -1,4 +1,4 @@
-# trend-cycle-toolkit
+# trend-cycle-toolkit <img src=".github/logo.png" align="right" height="139" alt="trend-cycle-toolkit logo" />
 
 Bayesian unobserved components models for US trend inflation, the output gap and trend output
 growth, by [Joshua Chan](https://joshuachan.org). Three series from six models, re-estimated
