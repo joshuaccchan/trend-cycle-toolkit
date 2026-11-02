@@ -39,3 +39,13 @@ read_on,path,views,unique_visitors
 2026-10-26,/joshuaccchan/trend-cycle-toolkit/blob/main/core/+uc/+util/build_hpsi.m,1,1
 2026-10-26,/joshuaccchan/trend-cycle-toolkit/branches,1,1
 2026-10-26,/joshuaccchan/trend-cycle-toolkit/pulls,1,1
+2026-11-02,/joshuaccchan/trend-cycle-toolkit,19,16
+2026-11-02,/joshuaccchan/trend-cycle-toolkit/tree/main/core/+uc,2,2
+2026-11-02,/joshuaccchan/trend-cycle-toolkit/tree/main/core/+uc/+models,2,2
+2026-11-02,/joshuaccchan/trend-cycle-toolkit/blob/main/core/+uc/+diag/geweke.m,1,1
+2026-11-02,/joshuaccchan/trend-cycle-toolkit/blob/main/core/+uc/+models/biuc_lrexp.m,1,1
+2026-11-02,/joshuaccchan/trend-cycle-toolkit/blob/main/core/+uc/+models/ucsv_sw07.m,1,1
+2026-11-02,/joshuaccchan/trend-cycle-toolkit/blob/main/core/+uc/+sv/ksc_rw_h0.m,1,1
+2026-11-02,/joshuaccchan/trend-cycle-toolkit/blob/main/core/+uc/+sv/rw_gaussian_approx.m,1,1
+2026-11-02,/joshuaccchan/trend-cycle-toolkit/blob/main/core/+uc/+util/build_hpsi.m,1,1
+2026-11-02,/joshuaccchan/trend-cycle-toolkit/commit/042aad2d3b3a484eb3c26ecdead74c2a3b7020bd,1,1
