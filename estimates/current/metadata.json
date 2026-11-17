@@ -1,26 +1,18 @@
 {
-  "vintage": "2026Q2",
-  "generated_utc": "2026-09-12T16:55:10Z",
-  "git_sha": "c5f7d5f141f1df27cea5f985eec32de100e887ba",
-  "amendments": [
-    {
-      "date_utc": "2026-09-17T00:14:03Z",
-      "git_sha": "075011589daf7185c76c5da62ebeea0bcd4e565d",
-      "added_models": ["uc_ma"],
-      "note": "uc_ma estimated on this vintage's archived inputs; no value published for the other five models changed"
-    }
-  ],
+  "vintage": "2026Q3",
+  "generated_utc": "2026-11-17T21:57:32Z",
+  "git_sha": "6e2fbda258d45cb4e007551e5a1a87156efe30ad",
   "mode": "local",
   "guardrails": {
     "pass": true,
     "nfail": 0,
     "revision": {
-      "detected": false,
-      "factor": 1,
-      "window_end": "",
-      "pce_inflation_max": null,
-      "gdp_growth_max": null,
-      "largest_move": null
+      "detected": true,
+      "factor": 3,
+      "window_end": "2024Q2",
+      "pce_inflation_max": 0.43469022673967572,
+      "gdp_growth_max": 0.5954793537388241,
+      "largest_move": 0.64411948411237829
     }
   },
   "models": [
@@ -28,9 +20,9 @@
       "model": "ucsv_sw07",
       "seed": 1,
       "sample_start": "1947Q2",
-      "sample_end": "2026Q2",
+      "sample_end": "2026Q3",
       "ndraws": 10000,
-      "elapsed_seconds": 37.7298809,
+      "elapsed_seconds": 63.3032101,
       "series": [
         "trend_inflation"
       ],
@@ -62,9 +54,9 @@
       "model": "ar_trend_bound",
       "seed": 2,
       "sample_start": "1947Q2",
-      "sample_end": "2026Q2",
+      "sample_end": "2026Q3",
       "ndraws": 3000,
-      "elapsed_seconds": 49.6366346,
+      "elapsed_seconds": 81.7659167,
       "series": [
         "trend_inflation"
       ],
@@ -90,11 +82,11 @@
       },
       "cites": "ARtrendbound.zip/ARtrend_bound.m",
       "accept": {
-        "tau": 0.87157142857142855,
-        "h": 0.82251428571428575,
-        "rho": 0.6534,
-        "sigrho": 0.92674285714285709,
-        "sigtau": 0.9788
+        "tau": 0.86674285714285715,
+        "h": 0.82168571428571424,
+        "rho": 0.60505714285714285,
+        "sigrho": 0.91165714285714283,
+        "sigtau": 0.97928571428571431
       },
       "versions": {
         "matlab": "25.2.0.3150157 (R2025b) Update 4",
@@ -105,9 +97,9 @@
       "model": "biuc_lrexp",
       "seed": 3,
       "sample_start": "1960Q1",
-      "sample_end": "2026Q1",
+      "sample_end": "2026Q2",
       "ndraws": 36000,
-      "elapsed_seconds": 2121.9339972,
+      "elapsed_seconds": 3062.9483041,
       "series": [
         "trend_inflation"
       ],
@@ -131,11 +123,11 @@
       },
       "cites": "trend_IE_code.zip/M1.m (chain length is this repository's)",
       "accept": {
-        "b": 0.6668675,
-        "psi": 0.9360525,
-        "sigb2": 0.925795,
-        "rhod1": 0.7609475,
-        "rhod2": 0.7246725
+        "b": 0.617715,
+        "psi": 0.9360125,
+        "sigb2": 0.91388,
+        "rhod1": 0.7487525,
+        "rhod2": 0.7129875
       },
       "versions": {
         "matlab": "25.2.0.3150157 (R2025b) Update 4",
@@ -146,9 +138,9 @@
       "model": "uc_ma",
       "seed": 6,
       "sample_start": "1947Q2",
-      "sample_end": "2026Q2",
+      "sample_end": "2026Q3",
       "ndraws": 1000,
-      "elapsed_seconds": 38.1887101,
+      "elapsed_seconds": 36.2731786,
       "series": [
         "trend_inflation"
       ],
@@ -171,8 +163,8 @@
       },
       "cites": "MASV_matlab.zip/UC_MA.m",
       "accept": {
-        "psi": 0.95536363636363641,
-        "phih": 0.75454545454545452
+        "psi": 0.95118181818181813,
+        "phih": 0.75536363636363635
       },
       "versions": {
         "matlab": "25.2.0.3150157 (R2025b) Update 4",
@@ -183,9 +175,9 @@
       "model": "uc_2m",
       "seed": 4,
       "sample_start": "1947Q1",
-      "sample_end": "2026Q2",
+      "sample_end": "2026Q3",
       "ndraws": 40000,
-      "elapsed_seconds": 175.0604718,
+      "elapsed_seconds": 277.8875115,
       "series": [
         "output_gap",
         "trend_growth"
@@ -209,7 +201,7 @@
       },
       "cites": "output_gap_2M_code.zip/UCUR_2M.m (chain length is this repository's)",
       "accept": {
-        "phi": 0.9999697674418605
+        "phi": 0.99996511627906981
       },
       "versions": {
         "matlab": "25.2.0.3150157 (R2025b) Update 4",
@@ -220,9 +212,9 @@
       "model": "ucur_break2",
       "seed": 5,
       "sample_start": "1947Q1",
-      "sample_end": "2026Q2",
+      "sample_end": "2026Q3",
       "ndraws": 10000,
-      "elapsed_seconds": 40.3828765,
+      "elapsed_seconds": 56.8730284,
       "series": [
         "output_gap"
       ],
@@ -248,7 +240,7 @@
       },
       "cites": "output_gap_code.zip/UCUR_break2.m",
       "accept": {
-        "phi": 1
+        "phi": 0.999990909090909
       },
       "versions": {
         "matlab": "25.2.0.3150157 (R2025b) Update 4",
@@ -261,41 +253,41 @@
       "name": "PCE",
       "file": "sources/PCE.csv",
       "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=DPCERD3Q086SBEA&fq=Quarterly&fam=avg",
-      "fetched": "12-Sep-2026 16:18:24",
-      "rows": 318,
+      "fetched": "17-Nov-2026 19:50:35",
+      "rows": 319,
       "first": "1947Q1",
-      "last": "2026Q2",
-      "sha256": "d1240ea0bd6d382d14d3b1892b227aa12e560c9e748368add7d66708324d8131"
+      "last": "2026Q3",
+      "sha256": "7981fd86a4b63b8465e682342fe4612370c3a111d8eeb4e2225d13e1ca32dd55"
     },
     {
       "name": "GDPC1",
       "file": "sources/GDPC1.csv",
       "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GDPC1",
-      "fetched": "12-Sep-2026 16:18:24",
-      "rows": 318,
+      "fetched": "17-Nov-2026 19:50:35",
+      "rows": 319,
       "first": "1947Q1",
-      "last": "2026Q2",
-      "sha256": "c8335f46e0628add80cc33db3b92e32f516e4188f6bdeeb4fedcfdb6f782ae5f"
+      "last": "2026Q3",
+      "sha256": "add5751647ea774cbc8e4aab1ee03ce014bc3df6efbf28e3f12cfc8a6d8bff46"
     },
     {
       "name": "PTR",
       "file": "sources/PTR.csv",
       "url": "https://www.federalreserve.gov/econres/files/data_only_package.zip",
-      "fetched": "12-Sep-2026 16:18:26",
-      "rows": 233,
+      "fetched": "17-Nov-2026 19:50:37",
+      "rows": 234,
       "first": "1968Q1",
-      "last": "2026Q1",
-      "sha256": "cf482fd848dd476c1329db795120316875fd0d275ad84a51ef1a356386b8ed3d"
+      "last": "2026Q2",
+      "sha256": "7a296e4a59594d656b257582c5db7b04c71c4927af201fb01e25805351c39245"
     },
     {
       "name": "PTR_EXPECT",
       "file": "sources/PTR_EXPECT.csv",
       "url": "",
-      "fetched": [],
-      "rows": 265,
+      "fetched": null,
+      "rows": 266,
       "first": "1960Q1",
-      "last": "2026Q1",
-      "sha256": "cc1acaf358b6f93a8a5969903614f7f3195c77092d4469cc56937df0d72da69b"
+      "last": "2026Q2",
+      "sha256": "8456b1eca93bf6f8d812dc88d4c12ba5b9271cc14e9aaaab7bafbdac27b8509d"
     }
   ]
 }

@@ -1,5 +1,5 @@
 name,file,url,fetched,rows,first,last,sha256
-PCE,sources/PCE.csv,https://fred.stlouisfed.org/graph/fredgraph.csv?id=DPCERD3Q086SBEA&fq=Quarterly&fam=avg,12-Sep-2026 16:18:24,318,1947Q1,2026Q2,d1240ea0bd6d382d14d3b1892b227aa12e560c9e748368add7d66708324d8131
-GDPC1,sources/GDPC1.csv,https://fred.stlouisfed.org/graph/fredgraph.csv?id=GDPC1,12-Sep-2026 16:18:24,318,1947Q1,2026Q2,c8335f46e0628add80cc33db3b92e32f516e4188f6bdeeb4fedcfdb6f782ae5f
-PTR,sources/PTR.csv,https://www.federalreserve.gov/econres/files/data_only_package.zip,12-Sep-2026 16:18:26,233,1968Q1,2026Q1,cf482fd848dd476c1329db795120316875fd0d275ad84a51ef1a356386b8ed3d
-PTR_EXPECT,sources/PTR_EXPECT.csv,,NaT,265,1960Q1,2026Q1,cc1acaf358b6f93a8a5969903614f7f3195c77092d4469cc56937df0d72da69b
+PCE,sources/PCE.csv,https://fred.stlouisfed.org/graph/fredgraph.csv?id=DPCERD3Q086SBEA&fq=Quarterly&fam=avg,17-Nov-2026 19:50:35,319,1947Q1,2026Q3,7981fd86a4b63b8465e682342fe4612370c3a111d8eeb4e2225d13e1ca32dd55
+GDPC1,sources/GDPC1.csv,https://fred.stlouisfed.org/graph/fredgraph.csv?id=GDPC1,17-Nov-2026 19:50:35,319,1947Q1,2026Q3,add5751647ea774cbc8e4aab1ee03ce014bc3df6efbf28e3f12cfc8a6d8bff46
+PTR,sources/PTR.csv,https://www.federalreserve.gov/econres/files/data_only_package.zip,17-Nov-2026 19:50:37,234,1968Q1,2026Q2,7a296e4a59594d656b257582c5db7b04c71c4927af201fb01e25805351c39245
+PTR_EXPECT,sources/PTR_EXPECT.csv,,NaT,266,1960Q1,2026Q2,8456b1eca93bf6f8d812dc88d4c12ba5b9271cc14e9aaaab7bafbdac27b8509d
