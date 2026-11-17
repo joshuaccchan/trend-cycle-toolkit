@@ -15,7 +15,7 @@ slips cannot be labeled with a quarter the data do not reach.
 | Estimates through | Released after BEA's advance estimate, around | Vintage tag |
 |---|---|---|
 | 2026Q2 | released 2026-09-12 | `v2026Q2` |
-| 2026Q3 | late October 2026 | `v2026Q3` |
+| 2026Q3 | released 2026-11-17 | `v2026Q3` |
 | 2026Q4 | late January 2027 | `v2026Q4` |
 | 2027Q1 | late April 2027 | `v2027Q1` |
 | 2027Q2 | late July 2027 | `v2027Q2` |
@@ -100,11 +100,15 @@ likelihood off:
 | `uc_2m` | 2.9 |
 | `biuc_lrexp` | 35.4 |
 
-About 41 minutes in series and 37 with two workers, so a quarterly run is not constrained by
-time. `biuc_lrexp` is almost all of it: its chain is 400,000 sweeps because shorter ones leave an
-effective sample below what G7 requires. `uc_ma` was added after that run; on its own it takes
-0.7 minutes. All six are listed as measured in `model_lists`, which is what lets a scheduled run
-proceed without `AllowUnmeasured`.
+One estimation of the five took about 41 minutes in series and 37 with two workers. `biuc_lrexp`
+is almost all of it: its chain is 400,000 sweeps because shorter ones leave an effective sample
+below what G7 requires. `uc_ma` was added after that run; on its own it takes 0.7 minutes. All six
+are listed as measured in `model_lists`, which is what lets a scheduled run proceed without
+`AllowUnmeasured`.
+
+**A release with a previous vintage estimates every model twice.** The second run stops each model
+at the previous vintage's last quarter, for the sample-extension chain G8 needs, and the models run
+one after another. The `v2026Q3` release took 127 minutes in all.
 
 A model whose settings change needs re-measuring, because the figure that opened the schedule was
 taken at the old ones.
@@ -114,8 +118,8 @@ taken at the old ones.
 The previous vintage stays current and correctly labeled — every published file carries its
 vintage. A slipped release does not become a skipped one: the trigger checks again every Monday.
 
-**A release the guardrails refuse is not retried automatically**, since that would re-run forty
-minutes of estimation every week. The trigger leaves `build\release_failed_<vintage>.txt` naming the
+**A release the guardrails refuse is not retried automatically**, since that would re-run two
+hours of estimation every week. The trigger leaves `build\release_failed_<vintage>.txt` naming the
 staged output to inspect, and does not try that vintage again until the file is deleted.
 
 **The freshness watchdog notices a trigger that has not fired.** Every Monday it compares FRED
@@ -132,3 +136,4 @@ that is published.
 |---|---|---|---|
 | `v2026Q2` | 2026-09-12 | 2026Q2 | First release. Out of cycle: 2026Q2 was due 1 September. `biuc_lrexp` ends 2026Q1, where `PTR` ends. |
 | `v2026Q2.1` | 2026-09-16 | 2026Q2 | Adds `uc_ma`, estimated on the 2026Q2 archived inputs. Every value `v2026Q2` published is unchanged. |
+| `v2026Q3` | 2026-11-17 | 2026Q3 | Run by hand: the scheduled runs of 2, 9 and 16 November stopped before finishing. First release after BEA's annual update; G9 found the revised history and widened G8's tolerance threefold. `biuc_lrexp` ends 2026Q2, where `PTR` ends. |

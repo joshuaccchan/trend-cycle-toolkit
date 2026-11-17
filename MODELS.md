@@ -198,5 +198,5 @@ model's last observation off the `date` column.
 ## Citing
 
 Cite the paper whose model is used, from the table in [README.md](README.md), together with the
-vintage the numbers were taken from. The current release tag is `v2026Q2.1`. All six references
+vintage the numbers were taken from. The current release tag is `v2026Q3`. All six references
 are in `CITATION.cff` in machine-readable form.

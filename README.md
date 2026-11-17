@@ -8,11 +8,10 @@ every quarter from public data.
 
 ## Status
 
-The current vintage is **2026Q2**, released 2026-09-12 and tagged **`v2026Q2.1`**, which is the
-tag to cite: it carries all six models, where the original `v2026Q2` predates `uc_ma`. The vintage
-covers 1947Q1 onward, except `biuc_lrexp`, which begins in 1960Q2 and ends where FRB/US `PTR`
-ends. A release is promoted only when every check in `estimates/guardrails.m` passes, and this one
-did. `RELEASE_CALENDAR.md` carries the release history.
+The current vintage is **2026Q3**, released 2026-11-17 and tagged **`v2026Q3`**. It covers 1947Q1
+onward, except `biuc_lrexp`, which begins in 1960Q2 and ends where FRB/US `PTR` ends. A release is
+promoted only when every check in `estimates/guardrails.m` passes, and this one did.
+`RELEASE_CALENDAR.md` carries the release history.
 
 ## The Three Series
 
@@ -48,7 +47,7 @@ The five Chan papers have replication packages at
 `ucsv_sw07` follows `chapter10/UCSV.m` in the book repository,
 [bayesian-macroeconometrics](https://github.com/joshuaccchan/bayesian-macroeconometrics).
 
-[MODELS.md](MODELS.md) sets out what each model assumes, why their estimates differ — 1.99 to 4.76
+[MODELS.md](MODELS.md) sets out what each model assumes, why their estimates differ — 1.97 to 3.96
 percent for trend inflation in 2026Q2 — and which to use for which question.
 
 **Trend inflation here is PCE inflation.** `biuc_lrexp` pairs inflation with FRB/US `PTR`, which
