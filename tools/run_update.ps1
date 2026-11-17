@@ -59,6 +59,28 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+# ---- native commands ------------------------------------------------------
+# git and MATLAB write progress to standard error; git push reports what it pushed
+# there. When the caller redirects PowerShell's streams, as the Monday task does with
+# *>>, Windows PowerShell turns each such line into an error record, and under 'Stop'
+# the first one ends the script. So native commands run under 'Continue', their
+# standard error is written out as text, and every call is judged by $LASTEXITCODE.
+# -Capture returns standard output instead of writing it.
+function Invoke-Native {
+    param(
+        [Parameter(Mandatory = $true)] [string] $Exe,
+        [string[]] $ArgList = @(),
+        [switch] $Capture
+    )
+    $ErrorActionPreference = 'Continue'      # local to this function
+    & $Exe @ArgList 2>&1 | ForEach-Object {
+        if ($_ -is [System.Management.Automation.ErrorRecord]) { Write-Host $_.ToString() }
+        elseif ($Capture) { $_ }
+        else { Write-Host $_ }
+    }
+}
+
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 Write-Host "checked:    $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
@@ -67,7 +89,7 @@ Write-Host "checked:    $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
 # The freshness watchdog and the traffic snapshot commit to main every week, so
 # a release machine that has not pulled is behind, and its push would be
 # refused. Fast-forward only: a local branch that has diverged needs a person.
-git pull --ff-only --quiet
+Invoke-Native git @('pull', '--ff-only', '--quiet')
 if ($LASTEXITCODE -ne 0) { throw "git pull --ff-only failed: the local branch has diverged from origin." }
 
 # ---- the Monday trigger -----------------------------------------------------
@@ -145,12 +167,25 @@ Write-Host "matlab:     $MatlabExe"
 # A release commit should contain the release and nothing else. Uncommitted
 # work in the tree would be swept into it by the `git add` below. MODELS.md is
 # included because run_release rewrites its vintage numbers from the promoted CSVs.
-$dirty = git status --porcelain -- estimates MODELS.md
+$dirty = Invoke-Native git @('status', '--porcelain', '--', 'estimates', 'MODELS.md') -Capture
 if ($dirty) {
     Write-Host "`nestimates/ or MODELS.md has uncommitted changes:" -ForegroundColor Yellow
     $dirty | ForEach-Object { Write-Host "  $_" }
     throw "Commit or stash them first: a release commit should hold the release and nothing else."
 }
+
+# ---- keep the machine awake -----------------------------------------------
+# A release runs for about two hours, and an idle laptop goes into standby, where
+# the run can outlast the scheduled task's time limit. This asks Windows to keep
+# the system and the display on. The request ends when this process exits.
+if (-not ('TrendCycle.Power' -as [type])) {
+    Add-Type -Namespace TrendCycle -Name Power -MemberDefinition @'
+[DllImport("kernel32.dll")]
+public static extern uint SetThreadExecutionState(uint esFlags);
+'@
+}
+# 0x80000003: ES_CONTINUOUS | ES_SYSTEM_REQUIRED | ES_DISPLAY_REQUIRED
+[void][TrendCycle.Power]::SetThreadExecutionState([uint32]2147483651)
 
 # ---- build the run_release call ------------------------------------------
 # Not $args: that is an automatic variable in PowerShell, holding the arguments
@@ -165,7 +200,7 @@ $call = "run_release(" + ($callArgs -join ', ') + ")"
 Write-Host "call:       $call"
 Write-Host "started:    $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')`n"
 
-& $MatlabExe -batch $call
+Invoke-Native $MatlabExe @('-batch', $call)
 if ($LASTEXITCODE -ne 0) {
     if ($IfNewData) {
         # Without this, a refused release would re-run the whole estimation
@@ -187,7 +222,7 @@ if ($DryRun) {
 }
 
 # ---- what did it promote? -------------------------------------------------
-$changed = git status --porcelain -- estimates
+$changed = Invoke-Native git @('status', '--porcelain', '--', 'estimates') -Capture
 if (-not $changed) {
     Write-Host "`nrun_release promoted nothing into estimates/. Nothing to commit." -ForegroundColor Yellow
     exit 0
@@ -201,33 +236,33 @@ $meta = Get-Content $metaPath -Raw | ConvertFrom-Json
 $v = $meta.vintage
 Write-Host "`npromoted vintage $v, generated $($meta.generated_utc)"
 Write-Host "files changed under estimates/ and MODELS.md:"
-git status --porcelain -- estimates MODELS.md | ForEach-Object { Write-Host "  $_" }
+Invoke-Native git @('status', '--porcelain', '--', 'estimates', 'MODELS.md') -Capture |
+    ForEach-Object { Write-Host "  $_" }
 
 # ---- commit and tag -------------------------------------------------------
-git add estimates MODELS.md
+Invoke-Native git @('add', 'estimates', 'MODELS.md')
+if ($LASTEXITCODE -ne 0) { throw "git add failed." }
 $msg = @"
 Estimates for $v
 
 Trend inflation, the output gap and trend output growth, re-estimated on data
 through $v. Every guardrail in estimates/guardrails.m passed; metadata.json
 records the seed, settings and source SHA-256 behind each series.
-
-Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
 "@
-git commit -m $msg
+Invoke-Native git @('commit', '-m', $msg)
 if ($LASTEXITCODE -ne 0) { throw "git commit failed." }
 
-# The run takes about forty minutes, long enough for the watchdog to have
+# The run takes about two hours, long enough for the watchdog to have
 # committed in the meantime. The release touches only estimates/ and the bots
 # only .github/, so replaying the release commit on top cannot conflict. This
 # happens before tagging, so the tag names the commit that is pushed.
 if (-not $NoPush) {
-    git pull --rebase --quiet
+    Invoke-Native git @('pull', '--rebase', '--quiet')
     if ($LASTEXITCODE -ne 0) { throw "git pull --rebase failed after the release commit. The commit is local and untagged." }
 }
 
 $tag = "v$v"
-git tag -a $tag -m "Estimates for $v"
+Invoke-Native git @('tag', '-a', $tag, '-m', "Estimates for $v")
 if ($LASTEXITCODE -ne 0) { throw "git tag $tag failed. It may already exist, which means this vintage was already released." }
 
 if ($NoPush) {
@@ -235,9 +270,9 @@ if ($NoPush) {
     exit 0
 }
 
-git push origin HEAD
+Invoke-Native git @('push', 'origin', 'HEAD')
 if ($LASTEXITCODE -ne 0) { throw "git push failed. The commit and tag are local." }
-git push origin $tag
+Invoke-Native git @('push', 'origin', $tag)
 if ($LASTEXITCODE -ne 0) { throw "pushing tag $tag failed. The commit is pushed; the tag is local." }
 
 Write-Host "`nReleased $v and pushed $tag." -ForegroundColor Green
