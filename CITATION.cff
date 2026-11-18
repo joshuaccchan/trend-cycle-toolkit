@@ -41,11 +41,9 @@ keywords:
   - stochastic volatility
   - Markov chain Monte Carlo
   - MATLAB
-# Two licenses, set out in README.md. MIT covers all code (core/, estimates/);
-# CC-BY-4.0 covers the estimates this repository publishes, which are a dataset.
-license:
-  - MIT
-  - CC-BY-4.0
+# Zenodo reads a single license from this file. README.md also licenses the
+# published estimates under CC-BY-4.0.
+license: MIT
 # The six method sources — the papers whose models are implemented here — plus
 # the companion repository. Each notes field names the model it corresponds to
 # and the published package that implements the method, where one exists.
