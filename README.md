@@ -1,5 +1,7 @@
 # trend-cycle-toolkit <img src=".github/logo.png" align="right" height="139" alt="trend-cycle-toolkit logo" />
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24329515.svg)](https://doi.org/10.5281/zenodo.24329515)
+
 Quarterly estimates of **US trend inflation, the output gap and trend output growth** from six
 Bayesian unobserved components models. The repository includes the estimates, archived input
 data and MATLAB code.
@@ -79,7 +81,13 @@ Optimization Toolbox. The two output gap models run on base MATLAB.
 ## Cite the Work
 
 If you use the estimates, cite the toolkit with the vintage you used, and the paper behind the
-model. [CITATION.cff](CITATION.cff) has the software citation and the six papers' full references.
+model:
+
+> Chan, J. C. C. (2026). *trend-cycle-toolkit: US trend inflation, the output gap and trend output growth, re-estimated quarterly*. Zenodo. https://doi.org/10.5281/zenodo.24329515
+
+The DOI resolves to the latest release. Each release also has its own DOI, listed on its Zenodo
+record, for citing a fixed vintage.
+[CITATION.cff](CITATION.cff) has the software citation and the six papers' full references.
 
 ## License
 
